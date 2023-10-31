@@ -1,0 +1,5 @@
+multiplexer:
+  ros__parameters:
+    control_sources:
+      minibot_control: ["topic1,topic2"]
+      gui_control: ["eg1,eg2"]
