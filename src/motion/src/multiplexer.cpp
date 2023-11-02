@@ -1,11 +1,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <list>
+
 using rclcpp::Node;
 class Multiplexer : public Node
 {
 public:
-
     Multiplexer() : Node("multiplexer")
     {
         auto relay = std::make_shared<RelayNode>();
@@ -13,6 +13,7 @@ public:
     }
 
 private:
+
     class RelayNode : public Node
     {
         // Aliasing so that if we change the name it should prevent many lines of updates
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
 {
     // Initialize the ROS2 system
     rclcpp::init(argc, argv);
+    
     // Instantiate muxer
     auto muxer = std::make_shared<Multiplexer>();
     //Execute until shutdown
