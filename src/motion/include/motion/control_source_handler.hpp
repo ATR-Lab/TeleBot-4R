@@ -28,7 +28,7 @@ public:
     const topicVector getActiveSourceTopics()const{return _activeTopics;}//Done
 
     //Setters
-    bool setActiveSource(const std::string& sourceName);//Done
+    bool setActiveSource(const std::string&);//Done
     const ControlSourceResult& registerSource(const std::string&,const topicVector&);
 private:
     std::unordered_map<std::string,topicVector> _controlSources;
