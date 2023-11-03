@@ -20,7 +20,7 @@ bool ControlSourceHandler::setActiveSource(const std::string& sourceName)
 
 }
 
-const ControlSourceResult& ControlSourceHandler::registerSource(const std::string& name,const topicVector& topics){
+ControlSourceResult ControlSourceHandler::registerSource(const std::string& name,const topicVector& topics){
     //Check that we have an actual name
     if(name.length()<1){
         std::cerr<<"Registration Failed: Source name can't be empty";

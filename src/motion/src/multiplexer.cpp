@@ -30,7 +30,7 @@ public:
         _timer = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&Multiplexer::relay, this));
     }
 
-    const inline ControlSourceResult &registerSource(const std::string &sourceName, const topicVector &topics)
+    inline ControlSourceResult registerSource(const std::string &sourceName, const topicVector &topics)
     {
         return _sourceHandler.registerSource(sourceName, topics);
     }

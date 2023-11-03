@@ -29,7 +29,7 @@ public:
 
     //Setters
     bool setActiveSource(const std::string&);//Done
-    const ControlSourceResult& registerSource(const std::string&,const topicVector&);
+    ControlSourceResult registerSource(const std::string&,const topicVector&);
 private:
     std::unordered_map<std::string,topicVector> _controlSources;
     topicVector _activeTopics;
