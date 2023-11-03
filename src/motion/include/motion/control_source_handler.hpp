@@ -8,27 +8,31 @@
 
 typedef std::vector<std::string> topicVector;
 
-enum ControlSourceRegisterResult{
+enum ControlSourceResult{
     FAILED,
     SUCCEEDED,
     ALREADY_REGISTERED
 };
 
-const char* NO_CONTROL_SOURCE="";
+const char* NO_CONTROL_SOURCE="no_source";
 
 class ControlSourceHandler{
 public:
-    ControlSourceHandler(){}//Done
+    ControlSourceHandler(){
+        //Initialize the default empty source
+        _controlSources.insert(std::make_pair(NO_CONTROL_SOURCE,_activeTopics));
+        _activeSource=NO_CONTROL_SOURCE;
+    }//Done
 
     const std::string getActiveSourceName()const{return _activeSource;}//Done
     const topicVector getActiveSourceTopics()const{return _activeTopics;}//Done
 
     //Setters
     bool setActiveSource(const std::string& sourceName);//Done
-    ControlSourceRegisterResult registerSource(const std::string&,const topicVector&);
+    const ControlSourceResult& registerSource(const std::string&,const topicVector&);
 private:
     std::unordered_map<std::string,topicVector> _controlSources;
     topicVector _activeTopics;
-    std::string _activeSource=NO_CONTROL_SOURCE;
+    std::string _activeSource;
 };
 #endif

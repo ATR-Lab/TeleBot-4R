@@ -20,26 +20,26 @@ bool ControlSourceHandler::setActiveSource(const std::string& sourceName)
 
 }
 
-ControlSourceRegisterResult ControlSourceHandler::registerSource(const std::string& name,const topicVector& topics){
+const ControlSourceResult& ControlSourceHandler::registerSource(const std::string& name,const topicVector& topics){
     //Check that we have an actual name
     if(name.length()<1){
         std::cerr<<"Registration Failed: Source name can't be empty";
-        return ControlSourceRegisterResult::FAILED;
+        return ControlSourceResult::FAILED;
     }
     //Empty sources not allowed
     if(topics.size()<1){
         std::cerr<<"Registration Failed: You may not register a source with no topics";
-        return ControlSourceRegisterResult::FAILED;
+        return ControlSourceResult::FAILED;
     }
     //Actually insert
     auto res=_controlSources.insert(std::make_pair(name,topics));
     try{
         //Check result of the insertion
         if(res.second){
-            return ControlSourceRegisterResult::SUCCEEDED;
+            return ControlSourceResult::SUCCEEDED;
         }
-        return ControlSourceRegisterResult::ALREADY_REGISTERED;
+        return ControlSourceResult::ALREADY_REGISTERED;
     }catch(...){
-        return ControlSourceRegisterResult::FAILED;
+        return ControlSourceResult::FAILED;
     } 
 }
