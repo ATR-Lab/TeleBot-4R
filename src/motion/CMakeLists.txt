@@ -13,7 +13,26 @@ find_package(std_msgs REQUIRED)
 find_package(telebot_interfaces REQUIRED)
 
 #Create library for our include files
-add_library(motion SHARED src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
+add_library(motion STATIC src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
+
+# this line to exports the library
+ament_export_targets(motion HAS_LIBRARY_TARGET)
+
+#Allows executable to be linked properly
+install(
+  DIRECTORY include/motion
+  DESTINATION include
+)
+#Actually move library to install
+install(
+  TARGETS motion
+  EXPORT motion
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #This handles the linking of the library
 target_include_directories(motion #Library name, in this case the package name
   PUBLIC
@@ -24,11 +43,16 @@ target_include_directories(motion #Library name, in this case the package name
 add_executable(multiplexer src/multiplexer.cpp)
 #Declare dependencies
 ament_target_dependencies(multiplexer rclcpp std_msgs telebot_interfaces)
+
 #Not really sure why this is needed but it is, just add ur executables into the list
 install(TARGETS
   multiplexer
   #<executable>
-  DESTINATION lib/${PROJECT_NAME})
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 
 #This links the multiplexer executable to the header files contained in our package
 target_link_libraries(multiplexer motion)

@@ -1,5 +1,10 @@
 #ifndef CONTROL_SOURCE_HANDLER_HPP
 #define CONTROL_SOURCE_HANDLER_HPP
+
+#ifndef NO_CONTROL_SOURCE
+#define NO_CONTROL_SOURCE "no_source"
+#endif
+
 #include <memory>
 #include <unordered_map>
 #include <string>
@@ -13,8 +18,6 @@ enum ControlSourceResult{
     SUCCEEDED,
     ALREADY_REGISTERED
 };
-
-const char* NO_CONTROL_SOURCE="no_source";
 
 class ControlSourceHandler{
 public:
