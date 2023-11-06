@@ -1,0 +1,1 @@
+![The design document for the motion system](../../imgs/motion_system_design.png)

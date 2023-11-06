@@ -9,5 +9,7 @@ Examples:
 - An L_2 system can rely on an L_1 system
 - An L_4 system can rely on L_3, L_2, and L_1 systems
 - An L_1 system cannot rely on an L_2 system or other L_1 systems, but could hypothetically rely on L_0 systems
+
+![An example of levels in a system](imgs/levels.png)
 ## Subsystem
 A subsystem is a collection of nodes and the data that flows between them to accomplish a common goal or functionality. Subsystems should be contained in a single package.
