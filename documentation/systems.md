@@ -1,5 +1,5 @@
 # About Telebot's Systems
-The Overall Telebot-V4
+The Telebot-4R is broken up into systems, levels, and subsystems. This division allows for a fine-grained control of dependency between subsystems.
 ## System
 Represents *where* the subsystem exists on a conceptual level. For example, the **Motion** subsystem is a part of the **Telebot** system. The **Unity** subsystem is part of the **Control** system.
 ## Level
