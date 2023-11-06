@@ -67,13 +67,7 @@ install(
   RUNTIME DESTINATION bin
 )
 
-find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/JointState.msg"
-  "msg/MotorState.msg"
-  "msg/MotorStateList.msg"
-)
 ################################################################################
 # Macro for ament package
 ################################################################################

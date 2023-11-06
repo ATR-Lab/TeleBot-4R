@@ -5,7 +5,7 @@
 #include "telebot_interfaces/msg/motor_goals.hpp"
 #include <exception>
 #include <memory>
-#include "dynamixel_sdk.h"
+#include "dynamixel_sdk/dynamixel_sdk.h"
 using rclcpp::Node;
 class Driver: public Node{
 public:

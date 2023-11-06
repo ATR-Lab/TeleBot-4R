@@ -1,3 +1,8 @@
+#This combines to define our path for the topics
+system: "telebot" #This is running on the telebot
+level: "L_1" #The level of the system
+subsystem: "motion" #The system name, generally should be the package name
+
 multiplexer:
   ros__parameters:
     control_sources:
