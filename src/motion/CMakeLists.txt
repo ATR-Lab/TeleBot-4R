@@ -13,7 +13,7 @@ find_package(std_msgs REQUIRED)
 find_package(telebot_interfaces REQUIRED)
 
 #Create library for our include files
-add_library(motion STATIC src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
+add_library(motion SHARED src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
 
 # this line to exports the library
 ament_export_targets(motion HAS_LIBRARY_TARGET)
