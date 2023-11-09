@@ -1,17 +1,27 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "telebot_interfaces/msg/motor_goals.hpp"
+#include "telebot_interfaces/msg/motor_goal.hpp"
+#include "telebot_interfaces/msg/motor_goal_list.hpp"
+#include "telebot_interfaces/msg/motor_state.hpp"
 #include <exception>
 #include <memory>
 #include <unordered_map>
 #include <list>
 #include <mutex>
 #include "motion/control_source_handler.hpp"
+// #include "motion/driver.hpp"
 using rclcpp::Node;
-using telebot_interfaces::msg::MotorGoals;
-typedef std::list<rclcpp::Subscription<MotorGoals>> SubscriberList;
+using telebot_interfaces::msg::MotorGoal;
+using telebot_interfaces::msg::MotorGoalList;
+using telebot_interfaces::msg::MotorState;
+typedef std::list<rclcpp::Subscription<MotorGoal>> SubscriberList;
 using std::placeholders::_1;
 
+// class Driver2:public Driver<MotorGoals,MotorState>{
+//     Driver2():Driver("driver_upper","tmp","out"){
+//         _publisher
+//     }
+// };
 class Multiplexer : public Node
 {
 public:
@@ -21,11 +31,11 @@ public:
         rclcpp::QoS subQos(rclcpp::KeepLast(1)); // Setting queue size
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
         subQos.transient_local();                // This means that this topic will grab the last message upon subscribing. The publisher must also be transient local.
+        auto t=&Multiplexer::changeControlSource;
         auto sourceListener = this->create_subscription<std_msgs::msg::String>("control_source", subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
-
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
-        _publisher = this->create_publisher<MotorGoals>("motor_goals", pubQos);
+        _publisher = this->create_publisher<MotorGoalList>("motor_goals", pubQos);
 
         // Create publish loop
         _timer = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&Multiplexer::relay, this));
@@ -61,12 +71,14 @@ private:
         try
         {
             //Compiling messages
-            MotorGoals msg;
+            MotorGoalList msg;
             for (const auto &it : _motorGoalBuffer)
             {
-                msg.motor_id.push_back(it.first);
-                msg.motor_goal.push_back(it.second.first);
-                msg.movement_type.push_back(it.second.second);
+                MotorGoal tmp;
+                tmp.motor_id=it.first;
+                tmp.motor_goal=it.second.first;
+                tmp.movement_type=it.second.second;
+                msg.motor_goals.push_back(tmp);
             }
             //Publishing new message
             _publisher->publish(msg);
@@ -80,21 +92,21 @@ private:
         }
         _bufferLocked = false;
     }
-    void listen(const MotorGoals &msg)
+    void listen(const MotorGoalList &msg)
     {
-        size_t motorGoalsLength = msg.motor_goal.size();
-        if (motorGoalsLength != msg.motor_id.size() || motorGoalsLength !=msg.movement_type.size())
-        {
-            RCLCPP_ERROR(this->get_logger(), "Multiplexer refused relay! Unequal count of entries in motor goals message.");
-            return;
-        }
-        for (size_t i = 0; i < motorGoalsLength; i++)
+        // size_t motorGoalsLength = msg.motor_goal.size();
+        // if (motorGoalsLength != msg.motor_id.size() || motorGoalsLength !=msg.movement_type.size())
+        // {
+        //     RCLCPP_ERROR(this->get_logger(), "Multiplexer refused relay! Unequal count of entries in motor goals message.");
+        //     return;
+        // }
+        for (auto& goal:msg.motor_goals)
         {
             while (_bufferLocked)
             {
                 sleep(0.05);
             }
-            auto pair=std::make_pair(msg.motor_id[i],std::make_pair(msg.motor_goal[i],msg.movement_type[i]));
+            auto pair=std::make_pair(goal.motor_id,std::make_pair(goal.motor_goal,goal.movement_type));
             auto res=_motorGoalBuffer.insert(pair);
             if(!res.second){
                 res.first->second=pair.second;
@@ -109,7 +121,7 @@ private:
     bool _bufferLocked = false;
     // Maps a motor id to a pair of float and a boolean for if it should be written
     std::unordered_map<int16_t, std::pair<float,std::string>> _motorGoalBuffer;
-    rclcpp::Publisher<MotorGoals>::SharedPtr _publisher;
+    rclcpp::Publisher<MotorGoalList>::SharedPtr _publisher;
     rclcpp::TimerBase::SharedPtr _timer;
 };
 
