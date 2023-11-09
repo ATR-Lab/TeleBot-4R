@@ -11,10 +11,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(telebot_interfaces REQUIRED)
+find_package(node_utils REQUIRED)
+find_package(dynamixel_sdk REQUIRED)
 
 #Create library for our include files
 add_library(motion SHARED src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
-
 # this line to exports the library
 ament_export_targets(motion HAS_LIBRARY_TARGET)
 
@@ -41,8 +42,14 @@ target_include_directories(motion #Library name, in this case the package name
 
 #Create an executable
 add_executable(multiplexer src/multiplexer.cpp)
+add_executable(driver_upper src/driver_upper.cpp)
+
+#DBG
+# add_executable(dummy src/dummy.cpp)
+# ament_target_dependencies(dummy rclcpp telebot_interfaces)
 #Declare dependencies
 ament_target_dependencies(multiplexer rclcpp std_msgs telebot_interfaces)
+ament_target_dependencies(driver_upper rclcpp std_msgs telebot_interfaces dynamixel_sdk)
 
 #Not really sure why this is needed but it is, just add ur executables into the list
 install(TARGETS
@@ -56,6 +63,7 @@ install(TARGETS
 
 #This links the multiplexer executable to the header files contained in our package
 target_link_libraries(multiplexer motion)
+target_link_libraries(driver_upper motion)
 
 #Idk what this does either
 if(BUILD_TESTING)

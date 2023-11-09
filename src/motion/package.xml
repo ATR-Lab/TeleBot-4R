@@ -16,7 +16,9 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>telebot_interfaces</depend>
-
+  <depend>node_utils</depend>
+  <depend>dynamixel_sdk</depend>
+  
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   
