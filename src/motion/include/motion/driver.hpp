@@ -62,27 +62,4 @@ private:
     bool _activePortAccess=false;
 };
 
-// template <typename SubscriptionType,typename PublishType>
-// class DriverNode: public Node{
-// public:
-//     DriverNode(const char* nodeName,const char* motorGoalSubTopic,const char* motorStatePubTopic,void*(void)(SubscriptionType)):Node(nodeName){
-//         //Init publisher
-//         QoS pubQos(10);
-//         _publisher=this->create_publisher<PublishType>(motorStatePubTopic,pubQos);
-
-//         //Init subscriber
-//         QoS subQos(rclcpp::KeepLast(2)); // Setting queue size
-//         subQos.best_effort();          // Makes it so that it is not guaranteed that a message doesn't get dropped, driver will not block for a message.
-//         subQos.durability_volatile(); // This means that this topic will only start getting messages once it is up.
-//         auto _subscriber=this->create_subscription(motorGoalSubTopic,subQos,std::bind(subscriptionCallback, this, _1));//Subscribe to receive the write messages.
-//     }
-
-// protected:
-//     virtual void writeMotors()=0;
-//     virtual void listenGoals(SubscriptionType& msg)=0;
-//     typename rclcpp::Publisher<PublishType>::SharedPtr _publisher;
-//     rclcpp::TimerBase::SharedPtr _timer;
-//     bool _writingMotorsLock=false;
-// };
-
 #endif
