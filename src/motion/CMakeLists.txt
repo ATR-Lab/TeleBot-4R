@@ -33,7 +33,10 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
-
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}
+)
 #This handles the linking of the library
 target_include_directories(motion #Library name, in this case the package name
   PUBLIC
@@ -45,15 +48,18 @@ add_executable(multiplexer src/multiplexer.cpp)
 add_executable(driver_upper src/driver_upper.cpp)
 
 #DBG
-# add_executable(dummy src/dummy.cpp)
-# ament_target_dependencies(dummy rclcpp telebot_interfaces)
+add_executable(dummy src/dummy.cpp)
+
 #Declare dependencies
 ament_target_dependencies(multiplexer rclcpp std_msgs telebot_interfaces)
 ament_target_dependencies(driver_upper rclcpp std_msgs telebot_interfaces dynamixel_sdk)
+ament_target_dependencies(dummy rclcpp telebot_interfaces)
 
 #Not really sure why this is needed but it is, just add ur executables into the list
 install(TARGETS
   multiplexer
+  driver_upper
+  dummy
   #<executable>
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
@@ -64,7 +70,7 @@ install(TARGETS
 #This links the multiplexer executable to the header files contained in our package
 target_link_libraries(multiplexer motion)
 target_link_libraries(driver_upper motion)
-
+target_link_libraries(dummy motion)
 #Idk what this does either
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
