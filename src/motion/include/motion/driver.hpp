@@ -24,8 +24,8 @@ public:
     /// @brief Writes to motors and then reads status of motors.
     /// @param motorVals The values to write to the motors
     /// @return The current state of the robots motors
-    MotorStateList motorWriteRead(MotorGoalList& motorVals){
-        _writeMotors(motorVals);
+    MotorStateList motorWriteRead(){
+        _writeMotors();
         return _readMotors();
     }
     void setWriteValues(const MotorGoalList& msg){
@@ -36,13 +36,16 @@ public:
         _buffer=msg;
     }
     virtual int initialize()=0;
+    std::chrono::duration<int64_t, std::milli> getWriteFrequency()const{return motorWriteFrequency;}
+    std::chrono::duration<int64_t, std::milli> getReadFrequency()const{return motorReadFrequency;}
+    const MotorGoalList* getMotorGoals()const{return &_buffer;}
 protected:
     /// @brief The delay between write loops. Intended to be used by a timer 
     std::chrono::duration<int64_t, std::milli> motorWriteFrequency=std::chrono::milliseconds(500);
     std::chrono::duration<int64_t, std::milli> motorReadFrequency=std::chrono::milliseconds(500);
     /// @brief Specific implementation of writing to the motors
     /// @param msg The goals to write
-    virtual void writeMotors(const MotorGoalList& msg)const=0;
+    virtual void writeMotors()const=0;
     //Port read
     virtual MotorStateList readMotors()=0;
 private:
@@ -51,10 +54,10 @@ private:
         _activePortAccess=false;
         return tmp;
     }
-    void _writeMotors(const MotorGoalList& motorVals){
+    void _writeMotors(){
         _activePortAccess=true;
         _writeLocked=true;
-        writeMotors(motorVals);
+        writeMotors();
         _writeLocked=false;
     }
     MotorGoalList _buffer;
