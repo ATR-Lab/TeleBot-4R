@@ -14,7 +14,7 @@ using rclcpp::Node;
 using telebot_interfaces::msg::MotorGoal;
 using telebot_interfaces::msg::MotorGoalList;
 using telebot_interfaces::msg::MotorState;
-typedef std::list<rclcpp::Subscription<MotorGoal>> SubscriberList;
+typedef std::list<std::shared_ptr<rclcpp::Subscription<MotorGoalList>>> SubscriberList;
 using std::placeholders::_1;
 
 // class Driver2:public Driver<MotorGoals,MotorState>{
@@ -27,11 +27,16 @@ class Multiplexer : public Node
 public:
     Multiplexer() : Node("multiplexer")
     {
+        _sourceHandler.registerSource("dbg",{"motor_goals_safe/upper"});//DBG Fake source registry
+        std_msgs::msg::String dbg;
+        dbg.data="dbg";
+        changeControlSource(dbg);
+
         // Set up our control source topic settings
         rclcpp::QoS subQos(rclcpp::KeepLast(1)); // Setting queue size
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
         subQos.transient_local();                // This means that this topic will grab the last message upon subscribing. The publisher must also be transient local.
-        auto t=&Multiplexer::changeControlSource;
+    
         auto sourceListener = this->create_subscription<std_msgs::msg::String>("control_source", subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
@@ -55,19 +60,31 @@ private:
             RCLCPP_ERROR(this->get_logger(), "Failed to set active source to: %s. This source is not registered.", sourceName.data.c_str());
             return;
         }
+
         //Clear subscriptions
         for (auto &sub : _activeSubscriptions)
         {
             // Gets rid of the shared pointers references and deallocates ob
-            sub.get_subscription_handle().reset();
+            sub->get_subscription_handle().reset();
         }
-        _sourceHandler.getActiveSourceTopics();
+        _activeSubscriptions.clear();
+        
+        //Register new subscribers
+        const rclcpp::QoS subQos(rclcpp::KeepLast(1));
+        for(auto& topic:_sourceHandler.getActiveSourceTopics()){
+            _activeSubscriptions.push_front(this->create_subscription<MotorGoalList>
+            (topic, subQos, std::bind(&Multiplexer::listen, this, _1)));
+        }
+        
         RCLCPP_INFO(this->get_logger(), "Successfully set source to: %s", sourceName.data.c_str());
     }
     void relay()
     {
         //Lock buffer
         _bufferLocked = true;
+        if(_motorGoalBuffer.empty()){
+            return;
+        }
         try
         {
             //Compiling messages
@@ -129,7 +146,6 @@ int main(int argc, char *argv[])
 {
     // Initialize the ROS2 system
     rclcpp::init(argc, argv);
-
     // Instantiate muxer
     auto muxer = std::make_shared<Multiplexer>();
     
