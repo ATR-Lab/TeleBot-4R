@@ -40,7 +40,7 @@ public:
         auto sourceListener = this->create_subscription<std_msgs::msg::String>("control_source", subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
-        _publisher = this->create_publisher<MotorGoalList>("motor_goals", pubQos);
+        _publisher = this->create_publisher<MotorGoalList>("/motor_goals", pubQos);
 
         // Create publish loop
         _timer = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&Multiplexer::relay, this));
@@ -82,7 +82,9 @@ private:
     {
         //Lock buffer
         _bufferLocked = true;
+        RCLCPP_INFO(this->get_logger(), "Relaying...");
         if(_motorGoalBuffer.empty()){
+            RCLCPP_INFO(this->get_logger(), "Relaying ignored!");
             return;
         }
         try
@@ -148,7 +150,6 @@ int main(int argc, char *argv[])
     rclcpp::init(argc, argv);
     // Instantiate muxer
     auto muxer = std::make_shared<Multiplexer>();
-    
     // Execute until shutdown
     rclcpp::spin(muxer);
     // Shut down the ROS2 system

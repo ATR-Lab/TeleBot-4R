@@ -24,15 +24,20 @@ class Dummy : public rclcpp::Node
     }
 
   private:
+    float last_val=-3.14;
     void timer_callback()
     {
       MotorGoalList message;
       MotorGoal goal;
-      goal.motor_id=1;
-      goal.motor_goal=2;
-      goal.movement_type="p";
+      goal.motor_id=2;
+      goal.motor_goal=last_val;
+      goal.movement_type="P";
       message.motor_goals.push_back(goal);
-      RCLCPP_INFO(this->get_logger(), "Publishing...");
+      RCLCPP_INFO(this->get_logger(), "Publishing... %3.2f",last_val);
+      last_val+=0.1;
+      if(last_val>3.14){
+        last_val=-3.14;
+      }
       publisher_->publish(message);
     }
     rclcpp::TimerBase::SharedPtr timer_;

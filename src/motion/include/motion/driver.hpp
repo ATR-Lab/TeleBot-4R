@@ -45,7 +45,7 @@ protected:
     std::chrono::duration<int64_t, std::milli> motorReadFrequency=std::chrono::milliseconds(500);
     /// @brief Specific implementation of writing to the motors
     /// @param msg The goals to write
-    virtual void writeMotors()const=0;
+    virtual void writeMotors()=0;
     //Port read
     virtual MotorStateList readMotors()=0;
 private:

@@ -31,13 +31,13 @@ public:
         // Instantiate our port and packet handlers
         _portHandler = dynamixel::PortHandler::getPortHandler(_device_name);            // eg. ttyUSB0;
         _packetHandler = dynamixel::PacketHandler::getPacketHandler(_protocol_version); // eg. 1 or 2
-
+        _bulkWriter=std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
         auto dxl_comm_result = _portHandler->openPort();
         if (dxl_comm_result == false)
         {
-            
-            std::cerr << "\033[31mFailed to open port \""<< _device_name<<"\"!\n\033[0m";
-            
+
+            std::cerr << "\033[31mFailed to open port \"" << _device_name << "\"!\n\033[0m";
+
             return -1;
         }
         else
@@ -49,7 +49,7 @@ public:
         dxl_comm_result = _portHandler->setBaudRate(_baudrate);
         if (dxl_comm_result == false)
         {
-            std::cerr << "\033[31mFailed to set the baudrate! "<< _baudrate<<"\n\033[0m";
+            std::cerr << "\033[31mFailed to set the baudrate! " << _baudrate << "\n\033[0m";
             return -1;
         }
         else
@@ -65,12 +65,10 @@ public:
     }
 
 protected:
-    
-    void writeMotors() const
+    void writeMotors()
     {
-        auto goals=getMotorGoals();
+        auto goals = getMotorGoals();
         // A sync writer would likely be more efficient, and easier to implement, need to guarantee that we will only be doing position writes
-        auto bulkWriter = dynamixel::GroupBulkWrite(_portHandler, _packetHandler);
         for (auto &goal : goals->motor_goals)
         {
             uint16_t addr, size;
@@ -83,7 +81,7 @@ protected:
                 const uint8_t MAX_BYTE_WRITE = 4;
                 // THIS IS PROBABLY UNSAFE CODE!!!
                 data = ((uint8_t *)(&transformedGoal)) + (MAX_BYTE_WRITE - size);
-                bulkWriter.addParam(goal.motor_id, addr, size, data);
+                _bulkWriter->addParam(goal.motor_id, addr, size, data);
             }
             catch (std::logic_error e)
             {
@@ -93,11 +91,12 @@ protected:
             data = nullptr; // Point off to nowhere so it doesn't clean up transformed vals twice
         }
         // Write to motors
-        bulkWriter.txPacket();
+        _bulkWriter->txPacket();
+        _bulkWriter->clearParam();
     }
     // Port read
     MotorStateList readMotors()
-    {
+    {        
         MotorStateList list;
         return list;
     }
@@ -105,7 +104,7 @@ protected:
 private:
     dynamixel::PortHandler *_portHandler;
     dynamixel::PacketHandler *_packetHandler;
-
+    std::unique_ptr<dynamixel::GroupBulkWrite> _bulkWriter;
     // Parameters that should be gotten from a node
     const char *_device_name;
     int _baudrate;
@@ -249,47 +248,58 @@ private:
     }
 };
 
-class DriverNode:public Node{
-    public:
-    DriverNode():Node("driver"){
-        
-        if(_driver.initialize()==-1){
+class DriverNode : public Node
+{
+public:
+    DriverNode() : Node("driver")
+    {
+
+        if (_driver.initialize() == -1)
+        {
             RCLCPP_ERROR(this->get_logger(), "Driver initialization failed!!! Driver not running!!! Check cerr output for more info.");
             throw std::system_error();
             return;
         }
         rclcpp::QoS subQos(3);
-        auto subscriber=this->create_subscription<MotorGoalList>("motor_goals",subQos,std::bind(&DriverNode::listenGoals,this, _1));
-        _publisher=this->create_publisher<MotorStateList>("upper_state",subQos);
-        _driverTimer=this->create_wall_timer(_driver.getWriteFrequency(),std::bind(&DriverNode::motorWriteRead, this));
+        _subscriber = this->create_subscription<MotorGoalList>("motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
+        _publisher = this->create_publisher<MotorStateList>("upper_state", subQos);
+        _driverTimer = this->create_wall_timer(_driver.getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
+        std::cout << "Finished construction\n";
     }
-    private:
-        void listenGoals(const MotorGoalList& msg){
-            _driver.setWriteValues(msg);
-        }
-        void motorWriteRead(){
-            _publisher.get()->publish(_driver.motorWriteRead());
-        }
-        UpperDriver _driver={"ttyUSB0",1000000};
-        rclcpp::TimerBase::SharedPtr _driverTimer;
-        rclcpp::Publisher<MotorStateList>::SharedPtr _publisher;
 
+private:
+    void listenGoals(const MotorGoalList &msg)
+    {
+        RCLCPP_INFO(this->get_logger(), "Heard sumn!");
+        _driver.setWriteValues(msg);
+        RCLCPP_INFO(this->get_logger(), "Vals set!");
+    }
+    void motorWriteRead()
+    {
+        RCLCPP_INFO(this->get_logger(), "Writing!");
+
+        _publisher.get()->publish(_driver.motorWriteRead());
+    }
+    UpperDriver _driver = {"/dev/ttyUSB0", 1000000};
+    rclcpp::TimerBase::SharedPtr _driverTimer;
+    rclcpp::Publisher<MotorStateList>::SharedPtr _publisher;
+    rclcpp::Subscription<MotorGoalList>::SharedPtr _subscriber;
 };
-
-
 
 int main(int argc, char *argv[])
 {
     // Initialize the ROS2 system
-    rclcpp::init(argc,argv);
-    try{
+    rclcpp::init(argc, argv);
+    try
+    {
         // Instantiate muxer
         auto driver = std::make_shared<DriverNode>();
         // Execute until shutdown
         rclcpp::spin(driver);
     }
-    catch(std::system_error e){
-        std::cout<<"Exiting...";
+    catch (std::system_error e)
+    {
+        std::cout << "Exiting...";
     }
     // Shut down the ROS2 system
     rclcpp::shutdown();
