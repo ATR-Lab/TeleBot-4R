@@ -84,6 +84,7 @@ private:
         _bufferLocked = true;
         RCLCPP_INFO(this->get_logger(), "Relaying...");
         if(_motorGoalBuffer.empty()){
+            _bufferLocked = false;
             RCLCPP_INFO(this->get_logger(), "Relaying ignored!");
             return;
         }
