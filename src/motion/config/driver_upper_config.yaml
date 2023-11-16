@@ -1,0 +1,6 @@
+driver_upper:
+  ros__parameters:
+    pro_motors: [4, 5, 11, 12, 30, 31]
+    xm_motors: [1, 2, 3, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 21, 22, 23, 24].
+    usb_device: "/dev/ttyUSB0"
+    usb_baudrate: 1000000
