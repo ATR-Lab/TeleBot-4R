@@ -288,8 +288,18 @@ public:
     DriverNode() : Node("driver_upper")
     {
         decParams();
-        //Initializing the driver
-        _driver= std::make_shared<UpperDriver>(get_parameter("usb_device").as_string(),get_parameter("usb_baudrate").as_int());
+        initDriver();
+        
+        rclcpp::QoS subQos(3);
+        _subscriber = this->create_subscription<MotorGoalList>("motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
+        _publisher = this->create_publisher<MotorStateList>("upper_state", subQos);
+        _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
+        std::cout << "Finished construction\n";
+    }
+
+private:
+    void initDriver(){
+        _driver= std::make_shared<UpperDriver>(get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
         _driver->setProMotors(get_parameter("pro_motors").as_integer_array());
         _driver->setXmMotors(get_parameter("xm_motors").as_integer_array());
         if (_driver->initialize() == -1)
@@ -299,14 +309,7 @@ public:
             return;
         }
         _driver->setTorqueAllMotors(true);
-        rclcpp::QoS subQos(3);
-        _subscriber = this->create_subscription<MotorGoalList>("motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
-        _publisher = this->create_publisher<MotorStateList>("upper_state", subQos);
-        _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
-        std::cout << "Finished construction\n";
     }
-
-private:
     void decParams(){
         this->declare_parameter("pro_motors", std::vector<int>{});
         this->declare_parameter("xm_motors", std::vector<int>{});
