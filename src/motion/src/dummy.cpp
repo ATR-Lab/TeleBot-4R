@@ -16,8 +16,20 @@ class Dummy : public rclcpp::Node
 {
   public:
     Dummy()
-    : Node("Dummy"), count_(0)
+    : Node("dummy"), count_(0)
     {
+      
+      declare_parameter("str_param","default");
+      declare_parameter("list_param",std::vector<int>());
+      declare_parameter("int_param",40);
+      std::cout<<get_parameter("str_param").as_string()<<std::endl;
+      std::cout<<get_parameter("int_param").as_int()<<std::endl;
+      //For some reason your parameter needs to be loaded into a variable before being iterated.
+      auto a=get_parameter("list_param").as_integer_array();
+      for(auto i:a){
+        std::cout<<i<<", ";
+      }
+      std::cout<<std::endl;
       publisher_ = this->create_publisher<MotorGoalList>("motor_goals_safe/upper", 10);
       timer_ = this->create_wall_timer(
       std::chrono::milliseconds(500), std::bind(&Dummy::timer_callback, this));
