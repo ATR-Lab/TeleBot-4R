@@ -23,6 +23,9 @@ enum MovementType
 class UpperDriver : public MotorDriver
 {
 public:
+    
+    UpperDriver():MotorDriver(){}
+    // const std::vector<int> motorIDS={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,};
     UpperDriver(const char *device_name, int baudrate, const float protocol_version = 2.0F) : MotorDriver(),
                                                                                               _device_name(device_name), _baudrate(baudrate), _protocol_version(protocol_version) {}
     int initialize()
@@ -32,6 +35,7 @@ public:
         _portHandler = dynamixel::PortHandler::getPortHandler(_device_name);            // eg. ttyUSB0;
         _packetHandler = dynamixel::PacketHandler::getPacketHandler(_protocol_version); // eg. 1 or 2
         _bulkWriter=std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
+
         auto dxl_comm_result = _portHandler->openPort();
         if (dxl_comm_result == false)
         {
@@ -58,13 +62,41 @@ public:
         }
         return 0;
     }
-    ~UpperDriver()
-    {
-        _portHandler->clearPort();
-        _portHandler->closePort();
+    
+    /// @brief Torques all motors, or a specified vector of motors
+    /// @param ids The id vector of motors to torque
+    void torqueMotor(int id, bool torqued){
+        int address=isProMotor(id)?DynamixelAddresses::Pro::RAM::TORQUE_ENABLE_ADDR:DynamixelAddresses::XM540::RAM::TORQUE_ENABLE_ADDR;
+        _packetHandler->write1ByteTxOnly(_portHandler,id,address,torqued);
     }
 
+    void setTorqueAllMotors(bool torqued){
+        uint8_t torqueInt=torqued;
+        uint8_t* data= &torqueInt;
+        for(auto&id:_proMotors){
+            using namespace DynamixelAddresses::Pro::RAM;
+            _bulkWriter->addParam(id,TORQUE_ENABLE_ADDR,TORQUE_ENABLE_SIZE,data);
+        }
+        for(auto&id:_xmMotors){
+            using namespace DynamixelAddresses::XM540::RAM;
+            _bulkWriter->addParam(id,TORQUE_ENABLE_ADDR,TORQUE_ENABLE_SIZE,data);
+        }
+        _bulkWriter->txPacket();
+        _bulkWriter->clearParam();
+    }
+    void setProMotors(const std::vector<int64_t>& ids){
+        _proMotors=ids;
+    }
+    void setXmMotors(const std::vector<int64_t>& ids){
+        _xmMotors=ids;
+    }
+    // ~UpperDriver()
+    // {
+    //     _portHandler->clearPort();
+    //     _portHandler->closePort();
+    // }
 protected:
+    
     void writeMotors()
     {
         auto goals = getMotorGoals();
@@ -102,6 +134,8 @@ protected:
     }
 
 private:
+    std::vector<int64_t> _proMotors;
+    std::vector<int64_t> _xmMotors;
     dynamixel::PortHandler *_portHandler;
     dynamixel::PacketHandler *_packetHandler;
     std::unique_ptr<dynamixel::GroupBulkWrite> _bulkWriter;
@@ -217,8 +251,8 @@ private:
     bool isProMotor(const uint16_t id) const
     {
 
-        const std::vector<int> proMotors = {4, 5, 11, 12, 30, 31};
-        for (const auto &val : proMotors)
+        
+        for (const auto &val : _proMotors)
         {
             if (id == val)
             {
@@ -251,36 +285,47 @@ private:
 class DriverNode : public Node
 {
 public:
-    DriverNode() : Node("driver")
+    DriverNode() : Node("driver_upper")
     {
-
-        if (_driver.initialize() == -1)
+        decParams();
+        //Initializing the driver
+        _driver= std::make_shared<UpperDriver>(get_parameter("usb_device").as_string(),get_parameter("usb_baudrate").as_int());
+        _driver->setProMotors(get_parameter("pro_motors").as_integer_array());
+        _driver->setXmMotors(get_parameter("xm_motors").as_integer_array());
+        if (_driver->initialize() == -1)
         {
             RCLCPP_ERROR(this->get_logger(), "Driver initialization failed!!! Driver not running!!! Check cerr output for more info.");
             throw std::system_error();
             return;
         }
+        _driver->setTorqueAllMotors(true);
         rclcpp::QoS subQos(3);
         _subscriber = this->create_subscription<MotorGoalList>("motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
         _publisher = this->create_publisher<MotorStateList>("upper_state", subQos);
-        _driverTimer = this->create_wall_timer(_driver.getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
+        _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
         std::cout << "Finished construction\n";
     }
 
 private:
+    void decParams(){
+        this->declare_parameter("pro_motors", std::vector<int>{});
+        this->declare_parameter("xm_motors", std::vector<int>{});
+        this->declare_parameter("usb_device", "DEFAULT");
+        this->declare_parameter("usb_baudrate", 1000000);
+    }
     void listenGoals(const MotorGoalList &msg)
     {
         RCLCPP_INFO(this->get_logger(), "Heard sumn!");
-        _driver.setWriteValues(msg);
+        _driver->setWriteValues(msg);
         RCLCPP_INFO(this->get_logger(), "Vals set!");
     }
     void motorWriteRead()
     {
         RCLCPP_INFO(this->get_logger(), "Writing!");
 
-        _publisher.get()->publish(_driver.motorWriteRead());
+        _publisher.get()->publish(_driver->motorWriteRead());
     }
-    UpperDriver _driver = {"/dev/ttyUSB0", 1000000};
+    std::shared_ptr<UpperDriver> _driver;
     rclcpp::TimerBase::SharedPtr _driverTimer;
     rclcpp::Publisher<MotorStateList>::SharedPtr _publisher;
     rclcpp::Subscription<MotorGoalList>::SharedPtr _subscriber;
