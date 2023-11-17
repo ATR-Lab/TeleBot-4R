@@ -9,6 +9,7 @@
 #include <list>
 #include <mutex>
 #include "motion/control_source_handler.hpp"
+#include "motion/topic_prefixes.hpp"
 // #include "motion/driver.hpp"
 using rclcpp::Node;
 using telebot_interfaces::msg::MotorGoal;
@@ -37,10 +38,11 @@ public:
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
         subQos.transient_local();                // This means that this topic will grab the last message upon subscribing. The publisher must also be transient local.
     
-        auto sourceListener = this->create_subscription<std_msgs::msg::String>("control_source", subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
+        //
+        _sourceListener = this->create_subscription<std_msgs::msg::String>(TopicPrefixes::getPublicTopicName("control_source"), subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
-        _publisher = this->create_publisher<MotorGoalList>("/motor_goals", pubQos);
+        _publisher = this->create_publisher<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), pubQos);
 
         // Create publish loop
         _timer = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&Multiplexer::relay, this));
@@ -142,6 +144,7 @@ private:
     // Maps a motor id to a pair of float and a boolean for if it should be written
     std::unordered_map<int16_t, std::pair<float,std::string>> _motorGoalBuffer;
     rclcpp::Publisher<MotorGoalList>::SharedPtr _publisher;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _sourceListener;
     rclcpp::TimerBase::SharedPtr _timer;
 };
 

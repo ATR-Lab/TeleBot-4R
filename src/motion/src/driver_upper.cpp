@@ -10,6 +10,8 @@
 #include "motion/driver.hpp"
 #include "dynamixel_sdk/dynamixel_sdk.h"
 #include "motion/dynamixel_addresses.hpp"
+#include "motion/topic_prefixes.hpp"
+
 using rclcpp::Node;
 using telebot_interfaces::msg::MotorGoalList;
 using telebot_interfaces::msg::MotorState;
@@ -291,8 +293,9 @@ public:
         initDriver();
         
         rclcpp::QoS subQos(3);
-        _subscriber = this->create_subscription<MotorGoalList>("motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
-        _publisher = this->create_publisher<MotorStateList>("upper_state", subQos);
+        ;
+        _subscriber = this->create_subscription<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), subQos, std::bind(&DriverNode::listenGoals, this, _1));
+        _publisher = this->create_publisher<MotorStateList>(TopicPrefixes::getPublicTopicName("upper_state"), subQos);
         _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
         std::cout << "Finished construction\n";
     }
