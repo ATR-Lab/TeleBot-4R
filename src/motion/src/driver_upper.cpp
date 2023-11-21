@@ -293,7 +293,7 @@ public:
         initDriver();
         
         rclcpp::QoS subQos(3);
-        ;
+        
         _subscriber = this->create_subscription<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), subQos, std::bind(&DriverNode::listenGoals, this, _1));
         _publisher = this->create_publisher<MotorStateList>(TopicPrefixes::getPublicTopicName("upper_state"), subQos);
         _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));

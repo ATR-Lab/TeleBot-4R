@@ -28,11 +28,10 @@ class Multiplexer : public Node
 public:
     Multiplexer() : Node("multiplexer")
     {
-        _sourceHandler.registerSource("dbg",{"motor_goals_safe/upper"});//DBG Fake source registry
-        std_msgs::msg::String dbg;
-        dbg.data="dbg";
-        changeControlSource(dbg);
-
+        declareParams();
+    
+        initializeSources();
+        
         // Set up our control source topic settings
         rclcpp::QoS subQos(rclcpp::KeepLast(1)); // Setting queue size
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
@@ -54,6 +53,26 @@ public:
     }
 
 private:
+    void initializeSources(){
+        //Load from file
+        std::vector<std::vector<std::string>> sources;
+        get_parameter("control_sources",sources);
+        for(auto& source:sources){
+            std::vector<std::string> topics(source.begin() + 1, source.end());//Copy just the topics
+            _sourceHandler.registerSource(source[0],topics);
+        }
+        
+        auto defaultSrc=get_parameter("default_source").as_string();
+        if(defaultSrc!=""){
+            std_msgs::msg::String str;
+            str.data=defaultSrc;
+            changeControlSource(str);
+        }
+    }
+    void declareParams(){
+        this->declare_parameter("control_sources",std::vector<std::vector<std::string>>());
+        this->declare_parameter("default_source","");
+    }
     void changeControlSource(const std_msgs::msg::String &sourceName)
     {
         auto success = _sourceHandler.setActiveSource(sourceName.data);
