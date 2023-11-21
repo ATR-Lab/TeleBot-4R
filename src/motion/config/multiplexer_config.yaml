@@ -1,0 +1,9 @@
+#Parameters for upper driver
+multiplexer:
+  ros__parameters:
+    control_sources: [
+      ["minibot_mirroring","tempTopic"],
+      ["dbg","fakTopics"]
+      ] #Vector of str vecs  [["src1name","topic1","topic2"],["src2name","top1"]]
+    default_source: "" #"" is  no source active
+
