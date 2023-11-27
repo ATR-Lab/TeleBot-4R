@@ -1,34 +1,8 @@
 /splitter:
   ros__parameters:
     motor_ids:
-      lower_ids:
-      - 50
-      - 51
-      - 63
-      upper_ids:
-      - 1
-      - 2
-      - 3
-      - 4
-      - 5
-      - 6
-      - 7
-      - 8
-      - 9
-      - 10
-      - 11
-      - 12
-      - 13
-      - 14
-      - 15
-      - 16
-      - 17
-      - 21
-      - 22
-      - 23
-      - 24
-      - 30
-      - 31
+      lower_ids: []
+      upper_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 21, 22, 23, 24, 30, 31]
     qos_overrides:
       /parameter_events:
         publisher:
@@ -36,5 +10,5 @@
           durability: volatile
           history: keep_last
           reliability: reliable
-    use_sim_time: false
+    
 
