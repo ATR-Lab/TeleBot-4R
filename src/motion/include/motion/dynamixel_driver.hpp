@@ -75,6 +75,14 @@ public:
     void setXmMotors(const std::vector<int64_t>& ids){
         _xmMotors=ids;
     }
+    auto getMotorIDs(){
+        auto ret=_xmMotors;
+        ret.insert(ret.end(),_proMotors.begin(),_proMotors.end());
+        return ret;
+    }
+    int motorCount(){
+        return _xmMotors.size()+_proMotors.size();
+    }
     // ~DynamixelDriver()
     // {
     //     _portHandler->clearPort();
