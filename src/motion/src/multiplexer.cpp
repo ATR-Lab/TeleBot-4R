@@ -55,12 +55,12 @@ public:
 private:
     void initializeSources(){
         //Load from file
-        std::vector<std::vector<std::string>> sources;
-        get_parameter("control_sources",sources);
-        for(auto& source:sources){
-            std::vector<std::string> topics(source.begin() + 1, source.end());//Copy just the topics
-            _sourceHandler.registerSource(source[0],topics);
-        }
+        // std::vector<std::vector<std::string>> sources;
+        // get_parameter("control_sources",sources);
+        // for(auto& source:sources){
+        //     std::vector<std::string> topics(source.begin() + 1, source.end());//Copy just the topics
+        //     _sourceHandler.registerSource(source[0],topics);
+        // }
         
         auto defaultSrc=get_parameter("default_source").as_string();
         if(defaultSrc!=""){
@@ -70,7 +70,6 @@ private:
         }
     }
     void declareParams(){
-        this->declare_parameter("control_sources",std::vector<std::vector<std::string>>());
         this->declare_parameter("default_source","");
     }
     void changeControlSource(const std_msgs::msg::String &sourceName)
