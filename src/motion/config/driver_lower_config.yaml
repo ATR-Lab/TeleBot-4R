@@ -1,0 +1,6 @@
+driver_upper:
+  ros__parameters:
+    pro_motors: [31, 40, 41, 42, 43] #Motor ids that are the dynamixel pro motors
+    roboclaw_motors: [60, 61, 62, 63]
+    usb_device: "/dev/ttyUSB0" #USB Device to be ran on
+    usb_baudrate: 1000000 #Baudrate, probably wont be changed
