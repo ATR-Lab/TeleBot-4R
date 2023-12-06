@@ -1,2 +1,2 @@
-minibot_mirroring tempTopic
-dbg motor_goals_safe/upper
+minibot_mirroring: tempTopic other
+dbg: motor_goals_safe/upper other other3

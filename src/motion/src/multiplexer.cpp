@@ -54,6 +54,8 @@ public:
 
 private:
     void initializeSources(){
+        _sourceHandler.loadFromFile("/home/chris/TeleBot-4R-ROS-2-1/src/motion/config/.ctrlsrcs");
+        
         //Load from file
         // std::vector<std::vector<std::string>> sources;
         // get_parameter("control_sources",sources);

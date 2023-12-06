@@ -66,7 +66,7 @@ private:
             RCLCPP_WARN(this->get_logger(),"No values read from motor. It is possible power was lost or a connection is loose.");
         }
         if(msg.motor_states.size()<_driver->motorCount()){
-            RCLCPP_WARN(this->get_logger(),"Only read from %d/%d motors. A connection could be loose...",msg.motor_states.size(),_driver->motorCount());
+            RCLCPP_WARN(this->get_logger(),"Only read from %d/%d motors. A connection could be loose...",(int)msg.motor_states.size(),_driver->motorCount());
         }
         _publisher.get()->publish(msg);
     }
