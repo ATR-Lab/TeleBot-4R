@@ -3,6 +3,7 @@
 #include "motion/driver.hpp"
 #include "motion/dynamixel_addresses.hpp"
 #include "motion/motion.hpp"
+#include "dynamixel_sdk/dynamixel_sdk.h"
 using Motion::MovementType;
 class DynamixelDriver : public MotorDriver
 {
@@ -18,8 +19,9 @@ public:
         // Instantiate our port and packet handlers
         _portHandler = dynamixel::PortHandler::getPortHandler(_device_name);            // eg. ttyUSB0;
         _packetHandler = dynamixel::PacketHandler::getPacketHandler(_protocol_version); // eg. 1 or 2
+        auto res=initPortHandler();
         _bulkWriter=std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
-        return initPortHandler();
+        return res;
     }
     int initPortHandler(){
         auto dxl_comm_result = _portHandler->openPort();
@@ -123,6 +125,7 @@ protected:
     MotorStateList readMotors()
     {        
         MotorStateList list;
+        dynami
         return list;
     }
 

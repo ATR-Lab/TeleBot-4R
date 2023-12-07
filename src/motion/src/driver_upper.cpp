@@ -37,8 +37,15 @@ public:
 private:
     void initDriver(){
         _driver= std::make_shared<DynamixelDriver>(get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
-        _driver->setProMotors(get_parameter("pro_motors").as_integer_array());
-        _driver->setXmMotors(get_parameter("xm_motors").as_integer_array());
+        auto proMotors=get_parameter("pro_motors").as_integer_array();
+        if(proMotors[0]!=-1){
+            _driver->setProMotors(proMotors);
+        }
+        auto xmMotors=get_parameter("xm_motors").as_integer_array();
+        if(xmMotors[0]!=-1){
+            _driver->setXmMotors(xmMotors);
+        }
+        
         if (_driver->initialize() == -1)
         {
             RCLCPP_ERROR(this->get_logger(), "Driver initialization failed!!! Driver not running!!! Check cerr output for more info.");
