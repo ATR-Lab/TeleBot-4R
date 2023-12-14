@@ -1,9 +1,10 @@
 #ifndef DYNAMIXEL_DRIVER_HPP
 #define DYNAMIXEL_DRIVER_HPP
 #include "motion/driver.hpp"
+#include <iostream>
 #include "motion/dynamixel_addresses.hpp"
 #include "motion/motion.hpp"
-#include "dynamixel_sdk/dynamixel_sdk.h"
+#include "telebot_interfaces/msg/motor_state.hpp"
 using Motion::MovementType;
 class DynamixelDriver : public MotorDriver
 {
@@ -121,13 +122,9 @@ protected:
         _bulkWriter->txPacket();
         _bulkWriter->clearParam();
     }
+
     // Port read
-    MotorStateList readMotors()
-    {        
-        MotorStateList list;
-        dynami
-        return list;
-    }
+    MotorStateList readMotors();
 
 private:
     std::vector<int64_t> _proMotors;

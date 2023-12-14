@@ -14,11 +14,16 @@ find_package(telebot_interfaces REQUIRED)
 find_package(node_utils REQUIRED)
 find_package(dynamixel_sdk REQUIRED)
 
+set(SOURCES
+  src/control_source_handler.cpp 
+  src/dynamixel_helper.cpp
+  src/dynamixel_driver.cpp
+)
 #Create library for our include files
-add_library(motion SHARED src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
+add_library(motion SHARED ${SOURCES})#specify only the cpp files in here, can be multiple
 # this line to exports the library
 ament_export_targets(motion HAS_LIBRARY_TARGET)
-
+ament_target_dependencies(motion telebot_interfaces dynamixel_sdk)
 #Allows executable to be linked properly
 install(
   DIRECTORY include/motion
