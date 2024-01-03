@@ -13,6 +13,7 @@ find_package(std_msgs REQUIRED)
 find_package(telebot_interfaces REQUIRED)
 find_package(node_utils REQUIRED)
 find_package(dynamixel_sdk REQUIRED)
+find_package(roboclaw_sdk REQUIRED)
 
 #Create library for our include files
 add_library(motion SHARED src/control_source_handler.cpp)#specify only the cpp files in here, can be multiple
