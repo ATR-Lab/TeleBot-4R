@@ -13,6 +13,7 @@ find_package(std_msgs REQUIRED)
 find_package(telebot_interfaces REQUIRED)
 find_package(node_utils REQUIRED)
 find_package(dynamixel_sdk REQUIRED)
+find_package(roboclaw_sdk REQUIRED)
 
 set(SOURCES
   src/control_source_handler.cpp 
