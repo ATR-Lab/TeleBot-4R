@@ -5,7 +5,10 @@
 #include "motion/dynamixel_addresses.hpp"
 #include "motion/motion.hpp"
 #include "telebot_interfaces/msg/motor_state.hpp"
+#include "motion/dynamixel_helper.hpp"
+#include <unordered_map>
 using Motion::MovementType;
+using telebot_interfaces::msg::MotorState;
 class DynamixelDriver : public MotorDriver
 {
 public:
@@ -273,5 +276,7 @@ private:
             return ((radians + PI) / TWO_PI) * MAX_TICK_DIF;
         }
     }
+    void updateMotors(std::function<void(MotorState&, int32_t)>,std::unordered_map<int,MotorState>,DynamixelHelper&);
+
 };
 #endif
