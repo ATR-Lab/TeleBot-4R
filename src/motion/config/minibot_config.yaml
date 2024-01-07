@@ -2,6 +2,6 @@ driver_upper:
 #Negative one at start of list means that will be ignored on load
   ros__parameters:
     pro_motors: [-1] #Motor ids that are the dynamixel pro motors
-    xm_motors: [1] #Motor ids that are dynamixel xm540
+    xm_motors: [2,17] #Motor ids that are dynamixel xm540
     usb_device: "/dev/ttyUSB0" #USB Device to be ran on
     usb_baudrate: 1000000 #Baudrate, probably wont be changed

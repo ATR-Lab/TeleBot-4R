@@ -21,11 +21,13 @@ public:
         return std::make_pair(_syncReader->getData(id,_currentAddr,_currentLen),
         _syncReader->isAvailable(id,_currentAddr,_currentLen));
     }
-
-private:
     void setReader(const std::pair<uint16_t,uint16_t>,const std::pair<uint16_t,uint16_t>,const bool);
+    void setReader(uint16_t,uint16_t);
+    void executeRead(){
+        _syncReader->txRxPacket();
+    }
     void addParams(const std::vector<int64_t>&);
-    
+private:
     uint16_t _currentAddr,_currentLen;
     dynamixel::PacketHandler* _packetHandler;
     dynamixel::PortHandler* _portHandler;

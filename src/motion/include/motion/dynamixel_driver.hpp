@@ -7,27 +7,40 @@
 #include "telebot_interfaces/msg/motor_state.hpp"
 #include "motion/dynamixel_helper.hpp"
 #include <unordered_map>
+#include <functional>
 using Motion::MovementType;
 using telebot_interfaces::msg::MotorState;
+struct ReadWriteRule
+{
+    uint16_t address;
+    uint16_t size;
+    std::function<void(MotorState &, int32_t)> callback;
+};
+
 class DynamixelDriver : public MotorDriver
 {
 public:
-    
-    DynamixelDriver():MotorDriver(){}
+    DynamixelDriver() : MotorDriver() {}
     // const std::vector<int> motorIDS={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,};
     DynamixelDriver(const char *device_name, int baudrate, const float protocol_version = 2.0F) : MotorDriver(),
-                                                                                              _device_name(device_name), _baudrate(baudrate), _protocol_version(protocol_version) {}
+                                                                                                  _device_name(device_name), _baudrate(baudrate), _protocol_version(protocol_version)
+    {
+    }
+    
     int initialize()
     {
         // Device name should be gotten from params
         // Instantiate our port and packet handlers
         _portHandler = dynamixel::PortHandler::getPortHandler(_device_name);            // eg. ttyUSB0;
         _packetHandler = dynamixel::PacketHandler::getPacketHandler(_protocol_version); // eg. 1 or 2
-        auto res=initPortHandler();
-        _bulkWriter=std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
+        auto res = initPortHandler();
+        _bulkWriter = std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
+
+        _dh = std::make_unique<DynamixelHelper>(_portHandler, _packetHandler);
         return res;
     }
-    int initPortHandler(){
+    int initPortHandler()
+    {
         auto dxl_comm_result = _portHandler->openPort();
         if (dxl_comm_result == false)
         {
@@ -56,38 +69,46 @@ public:
     }
     /// @brief Torques all motors, or a specified vector of motors
     /// @param ids The id vector of motors to torque
-    void torqueMotor(int id, bool torqued){
-        int address=isProMotor(id)?DynamixelAddresses::Pro::RAM::TORQUE_ENABLE_ADDR:DynamixelAddresses::XM540::RAM::TORQUE_ENABLE_ADDR;
-        _packetHandler->write1ByteTxOnly(_portHandler,id,address,torqued);
+    void torqueMotor(int id, bool torqued)
+    {
+        int address = isProMotor(id) ? DynamixelAddresses::Pro::RAM::TORQUE_ENABLE_ADDR : DynamixelAddresses::XM540::RAM::TORQUE_ENABLE_ADDR;
+        _packetHandler->write1ByteTxOnly(_portHandler, id, address, torqued);
     }
 
-    void setTorqueAllMotors(bool torqued){
-        uint8_t torqueInt=torqued;
-        uint8_t* data= &torqueInt;
-        for(auto&id:_proMotors){
+    void setTorqueAllMotors(bool torqued)
+    {
+        uint8_t torqueInt = torqued;
+        uint8_t *data = &torqueInt;
+        for (auto &id : _proMotors)
+        {
             using namespace DynamixelAddresses::Pro::RAM;
-            _bulkWriter->addParam(id,TORQUE_ENABLE_ADDR,TORQUE_ENABLE_SIZE,data);
+            _bulkWriter->addParam(id, TORQUE_ENABLE_ADDR, TORQUE_ENABLE_SIZE, data);
         }
-        for(auto&id:_xmMotors){
+        for (auto &id : _xmMotors)
+        {
             using namespace DynamixelAddresses::XM540::RAM;
-            _bulkWriter->addParam(id,TORQUE_ENABLE_ADDR,TORQUE_ENABLE_SIZE,data);
+            _bulkWriter->addParam(id, TORQUE_ENABLE_ADDR, TORQUE_ENABLE_SIZE, data);
         }
         _bulkWriter->txPacket();
         _bulkWriter->clearParam();
     }
-    void setProMotors(const std::vector<int64_t>& ids){
-        _proMotors=ids;
+    void setProMotors(const std::vector<int64_t> &ids)
+    {
+        _proMotors = ids;
     }
-    void setXmMotors(const std::vector<int64_t>& ids){
-        _xmMotors=ids;
+    void setXmMotors(const std::vector<int64_t> &ids)
+    {
+        _xmMotors = ids;
     }
-    auto getMotorIDs(){
-        auto ret=_xmMotors;
-        ret.insert(ret.end(),_proMotors.begin(),_proMotors.end());
+    auto getMotorIDs()
+    {
+        auto ret = _xmMotors;
+        ret.insert(ret.end(), _proMotors.begin(), _proMotors.end());
         return ret;
     }
-    int motorCount(){
-        return _xmMotors.size()+_proMotors.size();
+    int motorCount()
+    {
+        return _xmMotors.size() + _proMotors.size();
     }
     // ~DynamixelDriver()
     // {
@@ -95,7 +116,11 @@ public:
     //     _portHandler->closePort();
     // }
 protected:
-    
+void resetSuccessArray(){
+        for(int i=0;i<READ_ARRAY_SZ;i++){
+            successfulReads[i]=false;
+        }
+    }
     void writeMotors()
     {
         auto goals = getMotorGoals();
@@ -114,7 +139,7 @@ protected:
                 data = ((uint8_t *)(&transformedGoal)) + (MAX_BYTE_WRITE - size);
                 _bulkWriter->addParam(goal.motor_id, addr, size, data);
             }
-            catch (std::logic_error e)
+            catch (std::logic_error& e)
             {
                 std::cerr << e.what() << "\n";
             }
@@ -128,6 +153,9 @@ protected:
 
     // Port read
     MotorStateList readMotors();
+    std::unique_ptr<DynamixelHelper> _dh;
+    static const int READ_ARRAY_SZ = 256;
+    bool successfulReads[READ_ARRAY_SZ];
 
 private:
     std::vector<int64_t> _proMotors;
@@ -247,7 +275,6 @@ private:
     bool isProMotor(const uint16_t id) const
     {
 
-        
         for (const auto &val : _proMotors)
         {
             if (id == val)
@@ -276,7 +303,7 @@ private:
             return ((radians + PI) / TWO_PI) * MAX_TICK_DIF;
         }
     }
-    void updateMotors(std::function<void(MotorState&, int32_t)>,std::unordered_map<int,MotorState>,DynamixelHelper&);
-
+    void updateMotors(std::function<void(MotorState &, int32_t)>, std::unordered_map<int, MotorState>, DynamixelHelper &, std::vector<int64_t> &);
+    void runRules(std::vector<int64_t> &, const std::vector<ReadWriteRule> &,MotorState[]);
 };
 #endif
