@@ -6,9 +6,14 @@
 #include "rclcpp/rclcpp.hpp"
 #include "telebot_interfaces/msg/motor_goal_list.hpp"
 #include "telebot_interfaces/msg/motor_goal.hpp"
+#include "telebot_interfaces/msg/motor_state_list.hpp"
+#include "telebot_interfaces/msg/motor_state.hpp"
+#include "motion/topic_prefixes.hpp"
 using namespace std::chrono_literals;
 using telebot_interfaces::msg::MotorGoalList;
 using telebot_interfaces::msg::MotorGoal;
+using telebot_interfaces::msg::MotorStateList;
+using telebot_interfaces::msg::MotorState;
 /* This example creates a subclass of Node and uses std::bind() to register a
 * member function as a callback from the timer. */
 
@@ -30,25 +35,47 @@ class Dummy : public rclcpp::Node
         std::cout<<i<<", ";
       }
       std::cout<<std::endl;
-      publisher_ = this->create_publisher<MotorGoalList>("motor_goals_safe/upper", 10);
+      publisher_ = this->create_publisher<MotorGoalList>("dbg", 10);
       timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(500), std::bind(&Dummy::timer_callback, this));
+      std::chrono::milliseconds(1000), std::bind(&Dummy::timer_callback, this));
+      subscriber_ = this->create_subscription<MotorStateList>(
+            "/telebot/L_1/motion/public/upper_state", 10, std::bind(&Dummy::subscriber_callback, this, std::placeholders::_1));
     }
 
   private:
-    float last_val=-3.14;
-    void timer_callback()
+    float last_val=-2;
+    rclcpp::Subscription<telebot_interfaces::msg::MotorStateList>::SharedPtr subscriber_;
+    
+    void subscriber_callback(const MotorStateList::SharedPtr msg)
     {
+      if(msg->motor_states.size()<1){
+        return;
+      }
+        MotorGoalList message;
+        MotorGoal goal;
+        goal.motor_id=13;
+        goal.motor_goal=msg->motor_states[0].position;
+        goal.movement_type="P";
+        message.motor_goals.push_back(goal);
+        RCLCPP_INFO(this->get_logger(), "Echoing to 13....");
+    
+        publisher_->publish(message);
+    }
+    void timer_callback()
+    { 
       MotorGoalList message;
       MotorGoal goal;
-      goal.motor_id=2;
+      goal.motor_id=3;
       goal.motor_goal=last_val;
       goal.movement_type="P";
       message.motor_goals.push_back(goal);
       RCLCPP_INFO(this->get_logger(), "Publishing... %3.2f",last_val);
-      last_val+=0.1;
-      if(last_val>3.14){
-        last_val=-3.14;
+      
+      if(last_val==-2){
+        last_val=-1;
+      }
+      else{
+        last_val=-2;
       }
       publisher_->publish(message);
     }
