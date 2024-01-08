@@ -7,7 +7,7 @@
 #include "motion/dynamixel_addresses.hpp"
 using telebot_interfaces::msg::MotorState;
 
-
+//Callbacks for the rules
 void setPosition(MotorState& state,int32_t val){
     state.position=val;
 }
@@ -24,50 +24,6 @@ void setMoving(MotorState& state,int32_t val){
     state.moving=val;
 }
 
-// void DynamixelDriver::updateMotors(std::function<void(MotorState&, int32_t)> updateCallback,std::unordered_map<int,MotorState> motorStates,DynamixelHelper& dh,std::vector<int64_t>& motorList){
-//     for (auto &i : _xmMotors)
-//     {
-//         auto data = dh.getLastData(i);
-//         auto val = data.first;
-//         bool successful = data.second;
-
-//         if(!successful){
-//             continue;
-//         }
-
-//         auto found=motorStates.find(i);
-//         if(found==motorStates.end()){
-//             MotorState state;
-//             state.id=i;
-//             updateCallback(state,val);
-//         }
-//         else{
-//             updateCallback(found->second,val);
-//         }
-       
-//     }
-//     for (auto &i : _proMotors)
-//     {
-//         auto data = dh.getLastData(i);
-//         auto val = data.first;
-//         bool successful = data.second;
-
-//         if(!successful){
-//             continue;
-//         }
-
-//         auto found=motorStates.find(i);
-//         if(found==motorStates.end()){
-//             MotorState state;
-//             state.id=i;
-//             updateCallback(state,val);
-//             motorStates.insert(std::make_pair(i,state));
-//         }
-//         else{
-//             updateCallback(found->second,val);
-//         }
-//     }
-// }
 const std::vector<ReadWriteRule> getXMRules(){
     using namespace DynamixelAddresses::XM540;
     ReadWriteRule readPosition={RAM::PRESENT_POSITION_ADDR,RAM::PRESENT_POSITION_SIZE,setPosition};
@@ -114,7 +70,6 @@ void DynamixelDriver::runRules(std::vector<int64_t>& ids,const std::vector<ReadW
 }
 MotorStateList DynamixelDriver::readMotors()
 {
-    // std::cout<<"in read motors\n";
     //Get our rules one time
     static const std::vector<ReadWriteRule> xmRules=getXMRules();
     static const std::vector<ReadWriteRule> proRules=getProRules();
@@ -136,7 +91,5 @@ MotorStateList DynamixelDriver::readMotors()
             msg.motor_states.push_back(motorStates[i]);
         }
     }
-    std::cout<<msg.motor_states[0].position;
-    std::cout<<msg.motor_states[1].position;
     return msg;
 }

@@ -303,7 +303,6 @@ private:
             return ((radians + PI) / TWO_PI) * MAX_TICK_DIF;
         }
     }
-    void updateMotors(std::function<void(MotorState &, int32_t)>, std::unordered_map<int, MotorState>, DynamixelHelper &, std::vector<int64_t> &);
     void runRules(std::vector<int64_t> &, const std::vector<ReadWriteRule> &,MotorState[]);
 };
 #endif

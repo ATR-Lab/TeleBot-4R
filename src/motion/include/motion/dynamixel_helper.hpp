@@ -9,11 +9,7 @@ public:
         _packetHandler=packetHandler;
         _portHandler=portHandler;
     }
-    void readPositions(const std::vector<int64_t>&,bool);
-    void readErrors(const std::vector<int64_t>&,bool);
-    void readMoving(const std::vector<int64_t>&,bool);
-    void readCurrent(const std::vector<int64_t>&,bool);
-    void readVelocity(const std::vector<int64_t>&,bool);
+
     /// @brief Gets the last data read by one of the synchronous read functions. Eg. readPositions()
     /// @param id Motor id to retrieve value
     /// @return Pair of the value read and if it was available.
@@ -21,7 +17,6 @@ public:
         return std::make_pair(_syncReader->getData(id,_currentAddr,_currentLen),
         _syncReader->isAvailable(id,_currentAddr,_currentLen));
     }
-    void setReader(const std::pair<uint16_t,uint16_t>,const std::pair<uint16_t,uint16_t>,const bool);
     void setReader(uint16_t,uint16_t);
     void executeRead(){
         _syncReader->txRxPacket();
