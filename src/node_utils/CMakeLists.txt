@@ -9,25 +9,36 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(telebot_interfaces REQUIRED)
-add_library(${PROJECT_NAME} INTERFACE)
-
-target_include_directories(${PROJECT_NAME} INTERFACE
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>"
+set(SOURCES
+  src/node_utils.cpp
 )
-target_link_libraries(${PROJECT_NAME} INTERFACE rclcpp)
+add_library(node_utils SHARED ${SOURCES})#specify only the cpp files in here, can be multiple
+# this line to exports the library
+ament_export_targets(node_utils HAS_LIBRARY_TARGET)
+ament_target_dependencies(node_utils telebot_interfaces rclcpp)
 
-install(TARGETS ${PROJECT_NAME}
-  EXPORT "export_${PROJECT_NAME}"
-  ARCHIVE DESTINATION lib
+install(
+  DIRECTORY include/node_utils
+  DESTINATION include
+)
+#Actually move library to install
+install(
+  TARGETS node_utils
+  EXPORT node_utils
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION include/${PROJECT_NAME}
+install(DIRECTORY
+  
+  DESTINATION share/${PROJECT_NAME}
 )
+#This handles the linking of the library
+target_include_directories(node_utils #Library name, in this case the package name
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -48,6 +59,6 @@ ament_export_dependencies(
   rclcpp
 )
 #ament_export_libraries(${PROJECT_NAME})
-ament_export_targets("export_${PROJECT_NAME}")
+# ament_export_targets("export_${PROJECT_NAME}")
 
 ament_package()

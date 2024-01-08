@@ -3,13 +3,20 @@
 #define NODE_UTILS_HPP
 #include "rclcpp/rclcpp.hpp"
 #include <memory>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+#include <glob.h>
+#include <sstream>
+#include <vector>
 using rclcpp::Node;
 using std::placeholders::_1;
+
 namespace NodeUtils
 {
-    bool validateMessage(const MotorGoals& msg){
-        return msg.motor_goal.size() == msg.motor_id.size() && msg.motor_goal.size() ==msg.movement_type.size();
-    }
+    // bool validateMessage(const MotorGoals& msg){
+    //     return msg.motor_goal.size() == msg.motor_id.size() && msg.motor_goal.size() ==msg.movement_type.size();
+    // }
     /// @brief Creates a subscription for a node
     /// @tparam NodeT Your nodes type
     /// @tparam SubscriptionT The type of the subscription
@@ -27,6 +34,7 @@ namespace NodeUtils
         }
         return nodeObject.create_subscription(topic, subQos, std::bind(callback, &nodeObject, _1));
     }
+    std::string getPortBySerialID(const std::string&);
 }
 
 #endif
