@@ -23,7 +23,7 @@ set(SOURCES
 add_library(motion SHARED ${SOURCES})#specify only the cpp files in here, can be multiple
 # this line to exports the library
 ament_export_targets(motion HAS_LIBRARY_TARGET)
-ament_target_dependencies(motion telebot_interfaces dynamixel_sdk)
+ament_target_dependencies(motion telebot_interfaces dynamixel_sdk node_utils)
 #Allows executable to be linked properly
 install(
   DIRECTORY include/motion
@@ -58,7 +58,7 @@ add_executable(dummy src/dummy.cpp)
 
 #Declare dependencies
 ament_target_dependencies(multiplexer rclcpp std_msgs telebot_interfaces)
-ament_target_dependencies(driver_upper rclcpp std_msgs telebot_interfaces dynamixel_sdk)
+ament_target_dependencies(driver_upper rclcpp std_msgs telebot_interfaces dynamixel_sdk node_utils)
 ament_target_dependencies(dummy rclcpp telebot_interfaces)
 ament_target_dependencies(splitter rclcpp telebot_interfaces)
 
