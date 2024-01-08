@@ -8,13 +8,14 @@
 #include "motion/dynamixel_helper.hpp"
 #include <unordered_map>
 #include <functional>
+#include "node_utils/node_utils.hpp"
 using Motion::MovementType;
 using telebot_interfaces::msg::MotorState;
 struct ReadWriteRule
 {
     uint16_t address;
     uint16_t size;
-    std::function<void(MotorState &, int32_t)> callback;
+    std::function<void(MotorState &, uint32_t)> callback;
 };
 
 class DynamixelDriver : public MotorDriver
@@ -25,13 +26,30 @@ public:
     DynamixelDriver(const char *device_name, int baudrate, const float protocol_version = 2.0F) : MotorDriver(),
                                                                                                   _device_name(device_name), _baudrate(baudrate), _protocol_version(protocol_version)
     {
+
     }
-    
+    static float ticksToRadians(const int32_t ticks, const bool isPro)
+{
+    const auto PI = 3.14;
+    const auto TWO_PI = 6.28;
+    if (isPro)
+    {
+        const int32_t MAX_TICK_DIF = 501922;
+        return ((static_cast<float>(ticks) + (MAX_TICK_DIF / 2)) / MAX_TICK_DIF) * TWO_PI - PI;
+    }
+    else
+    {
+        const int32_t MAX_TICK_DIF = 4095;
+        return (static_cast<float>(ticks) / MAX_TICK_DIF) * TWO_PI - PI;
+    }
+}
     int initialize()
     {
         // Device name should be gotten from params
         // Instantiate our port and packet handlers
-        _portHandler = dynamixel::PortHandler::getPortHandler(_device_name);            // eg. ttyUSB0;
+
+
+        _portHandler = dynamixel::PortHandler::getPortHandler(NodeUtils::getPortBySerialID(_device_name).c_str());            // eg. ttyUSB0;
         _packetHandler = dynamixel::PacketHandler::getPacketHandler(_protocol_version); // eg. 1 or 2
         auto res = initPortHandler();
         _bulkWriter = std::make_unique<dynamixel::GroupBulkWrite>(dynamixel::GroupBulkWrite(_portHandler, _packetHandler));
@@ -303,6 +321,8 @@ private:
             return ((radians + PI) / TWO_PI) * MAX_TICK_DIF;
         }
     }
+    
+
     void runRules(std::vector<int64_t> &, const std::vector<ReadWriteRule> &,MotorState[]);
 };
 #endif
