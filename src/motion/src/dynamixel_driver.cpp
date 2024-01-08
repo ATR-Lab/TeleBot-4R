@@ -8,19 +8,32 @@
 using telebot_interfaces::msg::MotorState;
 
 //Callbacks for the rules
-void setPosition(MotorState& state,int32_t val){
-    state.position=val;
+void setPosition(MotorState& state,uint32_t val){
+    state.position=DynamixelDriver::ticksToRadians(val,false);
 }
-void setVelocity(MotorState& state,int32_t val){
+void setPositionPro(MotorState& state,uint32_t val){
+    state.position=DynamixelDriver::ticksToRadians(val,true);
+}
+void setVelocity(MotorState& state,uint32_t val){
     state.speed=val;
 }
-void setError(MotorState& state,int32_t val){
+void setError(MotorState& state,uint32_t val){
     state.error=val;
 }
-void setLoad(MotorState& state,int32_t val){
-    state.load=val;
+/// @brief IMPORTANT: This takes a uint32_t so that the callback can work with the class, it should be noted that the 2 byte size of the dynamixe
+/// @param state 
+/// @param val 
+void setLoad(MotorState& state,uint32_t val){
+    //This takes the low bytes and reinterprets them as 2's complement signed int16
+    auto signedConversion=(int16_t)val;
+    //This converts it to a percentage.
+    auto floatConversion=signedConversion/10.0; /*
+    We divide by ten because the dynamixel motors represent a percentage as the signed int value divided by 10. So for example, 1 is equal to 0.1% and -100 is -10%.
+    Negative means its pushing clockwise, positive means counterclockwise. AKA positive is a force going clockwise and vice versa.
+    */
+    state.load=floatConversion; //This is supposed to be a c
 }
-void setMoving(MotorState& state,int32_t val){
+void setMoving(MotorState& state,uint32_t val){
     state.moving=val;
 }
 
@@ -36,7 +49,7 @@ const std::vector<ReadWriteRule> getXMRules(){
 }
 const std::vector<ReadWriteRule> getProRules(){
     using namespace DynamixelAddresses::Pro;
-    ReadWriteRule readPosition={RAM::PRESENT_POSITION_ADDR,RAM::PRESENT_POSITION_SIZE,setPosition};
+    ReadWriteRule readPosition={RAM::PRESENT_POSITION_ADDR,RAM::PRESENT_POSITION_SIZE,setPositionPro};
     ReadWriteRule readErrors={RAM::HARDWARE_ERROR_STATUS_ADDR,RAM::HARDWARE_ERROR_STATUS_SIZE,setError};
     ReadWriteRule readVelocity={RAM::PRESENT_VELOCITY_ADDR,RAM::PRESENT_VELOCITY_SIZE,setVelocity};
     ReadWriteRule readMoving={RAM::MOVING_ADDR,RAM::MOVING_SIZE,setMoving};
