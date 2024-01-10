@@ -5,7 +5,11 @@
 #include <string>
 
 namespace NodeUtils{
-// Function to extract ID_SERIAL_SHORT from udevadm info response
+
+
+/// @brief  NOT INTENDED FOR USE, MEANT TO BE AN INTERNAL HELPER FUNCTION IN THE NAMESPACE. USE getPortBySerialID
+/// @param udevInfoOutput Output to search for serial ID
+/// @return Serial id for a given port
 std::string getSerialNumber(const std::string& udevInfoOutput) {
     std::istringstream iss(udevInfoOutput);
     std::string line;
@@ -62,6 +66,9 @@ std::string getSerialNumber(const std::string& udevInfoOutput) {
 //     return "";
 // }
 
+/// @brief Searches all ports for a specific serial Device
+/// @param serialID The serial id to search for
+/// @return The associated port. Eg /dev/ttyUSB1
 std::string getPortBySerialID(const std::string& serialID){
     // Initialize glob structure
     glob_t globResult;

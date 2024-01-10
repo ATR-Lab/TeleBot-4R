@@ -35,6 +35,21 @@ namespace NodeUtils
         return nodeObject.create_subscription(topic, subQos, std::bind(callback, &nodeObject, _1));
     }
     std::string getPortBySerialID(const std::string&);
+    
+    namespace TopicPrefixes{
+    /// @brief Creates the properly styled topic name for a public topic in the motion package.
+    /// @param topicName The desired name for the topic, may not start with a "/"
+    /// @return Your formatted topic string
+    std::string getPublicTopicName(std::string subsystemPrefix,std::string topicName){
+        return subsystemPrefix+"public/"+topicName;
+    }
+    /// @brief Creates the properly styled topic name for a private topic in the motion package.
+    /// @param topicName The desired name for the topic, may not start with a "/"
+    /// @return Your formatted topic string
+    std::string getPrivateTopicName(std::string subsystemPrefix,std::string topicName){
+        return subsystemPrefix+"private/"+topicName;
+    }
+}
 }
 
 #endif
