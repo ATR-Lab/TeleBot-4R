@@ -12,6 +12,7 @@
 #include "motion/topic_prefixes.hpp"
 #include "motion/dynamixel_driver.hpp"
 #include "motion/motion.hpp"
+#include "motion/roboclaw_driver.hpp"
 
 using rclcpp::Node;
 using telebot_interfaces::msg::MotorGoalList;
