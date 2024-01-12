@@ -65,7 +65,7 @@ ament_target_dependencies(multiplexer rclcpp std_msgs telebot_interfaces)
 
 ament_target_dependencies(driver_upper rclcpp std_msgs telebot_interfaces dynamixel_sdk node_utils)
 
-ament_target_dependencies(driver_lower rclcpp std_msgs telebot_interfaces dynamixel_sdk)
+ament_target_dependencies(driver_lower rclcpp std_msgs telebot_interfaces dynamixel_sdk roboclaw_sdk)
 ament_target_dependencies(dummy rclcpp telebot_interfaces)
 ament_target_dependencies(splitter rclcpp telebot_interfaces)
 

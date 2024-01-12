@@ -35,12 +35,12 @@ public:
 
     int initialize() override {
         std::for_each(_motorPorts.cbegin(), _motorPorts.cend(), [this](std::pair<int, std::string> val){
-            driver temp(val.second, _baudrate);
+            std::shared_ptr<driver> temp = std::make_shared<driver>(val.second, _baudrate);
             int id = val.first;
             // This might not be the best idea, not sure how it will play out...
-            temp.reset_encoders(DEFAULT_ADDRESS);
+            temp->reset_encoders(DEFAULT_ADDRESS);
             // Creates the pair and inserts it
-            _drivers.emplace(id, temp);
+            _drivers.insert(std::make_pair(id, temp));
         });
     }
 
@@ -50,7 +50,7 @@ protected:
 
         for(auto &goal : goals->motor_goals) {
             // NOTE: the speed parameter of this set_velocty might be wrong. It mentions that it should be big endian.
-            _drivers[goal.motor_id].set_velocity(DEFAULT_ADDRESS, std::make_pair(goal.motor_goal, goal.motor_goal));
+            _drivers[goal.motor_id]->set_velocity(DEFAULT_ADDRESS, std::make_pair(goal.motor_goal, goal.motor_goal));
         }
     }
 
@@ -59,7 +59,7 @@ protected:
     }
 
 private:
-    std::unordered_map<int, driver> _drivers;
+    std::unordered_map<int, std::shared_ptr<driver>> _drivers;
 
     std::unordered_map<int, std::string> _motorPorts;
     int _baudrate;
