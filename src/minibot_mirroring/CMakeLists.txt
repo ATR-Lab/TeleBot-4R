@@ -11,6 +11,16 @@ find_package(rclcpp REQUIRED)# uncomment the following section in order to fill 
 find_package(telebot_interfaces REQUIRED)
 find_package(node_utils REQUIRED)
 
+add_executable(minibot_mirror src/minibot_mirror.cpp)
+ament_target_dependencies(minibot_mirror rclcpp telebot_interfaces node_utils)
+install(TARGETS
+  minibot_mirror
+  #<executable>
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
