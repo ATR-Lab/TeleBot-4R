@@ -12,10 +12,14 @@ public:
     MinibotMirror() : Node("minibot_mirror")
     {
         initMap();
+        rclcpp::QoS qos(3);
+        qos.best_effort();
+        qos.durability_volatile();
+        _publisher = this->create_publisher<MotorGoalList>("mirror_minibot", qos);
         _subscription = create_subscription<MotorStateList>(
-            "placeholder_topic", 10, std::bind(&MinibotMirror::subscriptionCallback, this, std::placeholders::_1));
+            "telebot/L_1/motion/public/upper_state", 10, std::bind(&MinibotMirror::subscriptionCallback, this, std::placeholders::_1));
 
-        timer_ = create_wall_timer(std::chrono::milliseconds(500), std::bind(&MinibotMirror::timerCallback, this));
+        timer_ = create_wall_timer(std::chrono::milliseconds(500), std::bind(&MinibotMirror::publishCallback, this));
     }
 
 private:
@@ -39,6 +43,23 @@ private:
             {16, 23}, // left_wrist_y
             {17, 24}  // left_gripper
         };
+        // _minibotToTelebot = {
+        //     {2, 12},   // right_shoulder_x
+        //     {1, 11},   // right_shoulder_y
+        //     {3, 13},   // right_shoulder_z
+        //     {4, 14},   // right_arm_x
+        //     {5, },   // right_arm_z
+        //     {6, 16},   // right_wrist_y
+        //     {7, 17},  // right_gripper
+        //     {11, 11}, // left_shoulder_x
+        //     {12, 12}, // left_shoulder_y
+        //     {13, 17}, // left_shoulder_z
+        //     {14, 21}, // left_arm_x
+        //     {15, 22}, // left_arm_z
+        //     {16, 23}, // left_wrist_y
+        //     {17, 24}  // left_gripper
+        // };
+
     }
 
     void subscriptionCallback(const MotorStateList::SharedPtr msg)
@@ -73,32 +94,53 @@ private:
             return false;
         }
     }
-
-    bool constructClawMessage(MotorState minibotState, MotorGoalList &goals)
+    // Non linear control mapping for more precision towards -3.14
+    float clawTransform(float minibotClawPosition)
+    {
+        const float A = 0.281;
+        const float B = 1.77;
+        const float C = 2.78;
+        return (A * (minibotClawPosition * minibotClawPosition)) + (minibotClawPosition * B) + C;
+    }
+    // Constructs and adds the messages for the claws
+    bool constructClawMessage(const MotorState &minibotState, MotorGoalList &goals)
     {
         const int LEFT_MINI_CLAW = 7;
         const int RIGHT_MINI_CLAW = 17;
-        
+
         MotorGoal outerPincer, innerPincer;
         outerPincer.movement_type = "P";
         innerPincer.movement_type = "P";
-        
+
         if (minibotState.id == LEFT_MINI_CLAW)
         {
             // Calculate claw positions for telebot left motors
-            outerPincer.motor_id = 23;//IDK if this is actually outer, need real testing
-            innerPincer.motor_id = 24;//IDK if this is actually inner, need real testing
-            // Logic for transforming outer
+            outerPincer.motor_id = 23; // IDK if this is actually outer, need real testing
+            innerPincer.motor_id = 24; // IDK if this is actually inner, need real testing
+
+            outerPincer.motor_goal = clawTransform(minibotState.position);        // Motor 23 approaches 0 from +1.5 to close
+            innerPincer.motor_goal = -1.0 * clawTransform(minibotState.position); // Motor 24 appoaches 0 from -1.5 to close
+            
+            goals.motor_goals.push_back(outerPincer);
+            goals.motor_goals.push_back(innerPincer);
+            return true;
         }
+        // I didn't measure these, bc connections were loose, will need to verify or re attach to make match the pattern
         else if (minibotState.id == RIGHT_MINI_CLAW)
         {
             // Calculate claw positions for telebot right motors
-            outerPincer.motor_id = 21;//IDK if this is actually outer, need real testing
-            innerPincer.motor_id = 22;//IDK if this is actually inner, need real testing
-            // Logic for transforming inner
+            outerPincer.motor_id = 21; // IDK if this is actually outer, need real testing
+            innerPincer.motor_id = 22; // IDK if this is actually inner, need real testing
+
+            outerPincer.motor_goal = clawTransform(minibotState.position);        // Motor 23 approaches 0 from +1.5 to close
+            innerPincer.motor_goal = -1.0 * clawTransform(minibotState.position); // Motor 24 appoaches 0 from -1.5 to close
+
+            goals.motor_goals.push_back(outerPincer);
+            goals.motor_goals.push_back(innerPincer);
+
+            return true;
         }
-
-
+        return false;
     }
     MotorGoalList constructMessage()
     {
@@ -108,17 +150,20 @@ private:
         for (auto &statePair : _motorStateBuffer)
         {
             auto rawState = statePair.second;
-            if(constructClawMessage(rawState,msg)){
-
+            if (constructClawMessage(rawState, msg))
+            {
+                continue;
             }
 
             MotorGoal transformedGoal;
             transformedGoal.motor_id = _minibotToTelebot.at(rawState.id);
             transformedGoal.movement_type = "P";
         }
+        return msg;
     }
-    void timerCallback()
+    void publishCallback()
     {
+
         _publisher->publish(constructMessage());
     }
     unordered_map<int32_t, int32_t> _minibotToTelebot;    // Maps minibot ids to their telebot equivalent
