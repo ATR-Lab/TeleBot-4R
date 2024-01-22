@@ -149,6 +149,12 @@ void resetSuccessArray(){
             uint8_t *data;
             try
             {
+                //Check if torque msg
+                if(goal.movement_type[0]==MovementType::TORQUE){
+                    //If it is 0 we untorque, otherwise
+                    torqueMotor(goal.motor_id,goal.motor_goal>0);
+                    continue;
+                }
                 std::tie(addr, size) = getModeInfo(goal);
                 int32_t transformedGoal = applyTransform(goal);
                 // Convert to a uint_8 array

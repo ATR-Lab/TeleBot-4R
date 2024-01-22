@@ -7,7 +7,8 @@ namespace Motion
     {
         POSITION = 'P',
         PWM = 'T',
-        VELOCITY = 'V'
+        VELOCITY = 'V',
+        TORQUE='Q'
     };
 }
 
