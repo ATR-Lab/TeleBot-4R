@@ -72,7 +72,7 @@ private:
         if(msg.motor_states.size()==0){
             RCLCPP_WARN(this->get_logger(),"No values read from motor. It is possible power was lost or a connection is loose.");
         }
-        if(msg.motor_states.size()<_driver->motorCount()){
+        if(msg.motor_states.size()<static_cast<size_t>(_driver->motorCount())){
             RCLCPP_WARN(this->get_logger(),"Only read from %d/%d motors. A connection could be loose...",(int)msg.motor_states.size(),_driver->motorCount());
         }
         _publisher.get()->publish(msg);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
         // Execute until shutdown
         rclcpp::spin(driver);
     }
-    catch (std::system_error e)
+    catch (std::system_error& e)
     {
         std::cout << "Exiting...";
     }
