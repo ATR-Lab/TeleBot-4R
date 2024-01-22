@@ -1,2 +1,2 @@
-minibot_mirroring: tempTopic other
-dbg: dbg
+minibot_mirroring: tempTopic 
+dbg: torque mirror_minibot
