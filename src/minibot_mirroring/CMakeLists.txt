@@ -6,15 +6,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
+# find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)# uncomment the following section in order to fill in
 find_package(telebot_interfaces REQUIRED)
 find_package(node_utils REQUIRED)
 
 add_executable(minibot_mirror src/minibot_mirror.cpp)
+add_executable(torquer src/torquer.cpp)
+# add_executable(torquer scripts/torquer.py)
+ament_target_dependencies(torquer rclcpp telebot_interfaces node_utils)
 ament_target_dependencies(minibot_mirror rclcpp telebot_interfaces node_utils)
 install(TARGETS
   minibot_mirror
+  torquer
   #<executable>
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
