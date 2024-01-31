@@ -13,8 +13,8 @@ public:
     {
         initMap();
         rclcpp::QoS qos(3);
-        qos.best_effort();
-        qos.durability_volatile();
+        qos.reliable();
+        qos.transient_local();
         _publisher = this->create_publisher<MotorGoalList>("mirror_minibot", qos);
         _subscription = create_subscription<MotorStateList>(
             "telebot/L_1/motion/public/upper_state", 10, std::bind(&MinibotMirror::subscriptionCallback, this, std::placeholders::_1));
@@ -43,23 +43,6 @@ private:
             {16, 23}, // left_wrist_y
             {17, 24}  // left_gripper
         };
-        // _minibotToTelebot = {
-        //     {2, 12},   // right_shoulder_x
-        //     {1, 11},   // right_shoulder_y
-        //     {3, 13},   // right_shoulder_z
-        //     {4, 14},   // right_arm_x
-        //     {5, },   // right_arm_z
-        //     {6, 16},   // right_wrist_y
-        //     {7, 17},  // right_gripper
-        //     {11, 11}, // left_shoulder_x
-        //     {12, 12}, // left_shoulder_y
-        //     {13, 17}, // left_shoulder_z
-        //     {14, 21}, // left_arm_x
-        //     {15, 22}, // left_arm_z
-        //     {16, 23}, // left_wrist_y
-        //     {17, 24}  // left_gripper
-        // };
-
     }
 
     void subscriptionCallback(const MotorStateList::SharedPtr msg)
@@ -120,7 +103,7 @@ private:
 
             outerPincer.motor_goal = clawTransform(minibotState.position);        // Motor 23 approaches 0 from +1.5 to close
             innerPincer.motor_goal = -1.0 * clawTransform(minibotState.position); // Motor 24 appoaches 0 from -1.5 to close
-            
+
             goals.motor_goals.push_back(outerPincer);
             goals.motor_goals.push_back(innerPincer);
             return true;
@@ -155,9 +138,20 @@ private:
                 continue;
             }
 
+            // Make sure motor has a destination to mirror to. Ignore it if not
+            if (_minibotToTelebot.count(rawState.id) < 1)
+            {
+                RCLCPP_INFO_ONCE(this->get_logger(), "Not all motors from subscription are being relayed. This can be ignored if there are only certain motors you want to mirror.");
+                continue;
+            }
+
+            //Mirror the motor
             MotorGoal transformedGoal;
+            transformedGoal.motor_goal = rawState.goal;
             transformedGoal.motor_id = _minibotToTelebot.at(rawState.id);
             transformedGoal.movement_type = "P";
+
+            msg.motor_goals.push_back(transformedGoal);
         }
         return msg;
     }
