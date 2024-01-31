@@ -1,0 +1,4 @@
+minibot_mirror:
+  ros__parameters:
+    source_motors:      [1, 2, 3, 4, 5, 6, 7 , 11, 12, 13, 14, 15, 16, 17] #Index i in this maps to index i in dest motors
+    destination_motors: [4, 5, 6, 7, 8, 9, -1, 11, 12, 17, 21, 22, 23, -1] #Denote a motor that will not be mirrored directly as mapping to -1 for error detection
