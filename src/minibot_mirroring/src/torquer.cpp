@@ -8,7 +8,7 @@ class MyPublisher : public rclcpp::Node
 {
 public:
   MyPublisher()
-  : Node("my_publisher")
+      : Node("my_publisher")
   {
     publisher_ = this->create_publisher<telebot_interfaces::msg::MotorGoalList>("torque", 10);
   }
@@ -34,28 +34,74 @@ int main(int argc, char *argv[])
   rclcpp::init(argc, argv);
   auto node = std::make_shared<MyPublisher>();
 
-  while (true)
+  while (rclcpp::ok())
   {
     std::string input;
     std::cout << "Enter 'q' to quit or anything else to continue: ";
     std::getline(std::cin, input);
-    if (input == "q")
+    if (input == "q" || input == "Q")
     {
       break;
     }
 
+    std::string buffer;
+    size_t resSize = -1;
     int32_t id;
     std::cout << "Enter motor id: ";
-    std::cin>>id;
+    // Avoid incorrect input errors
+    while (resSize != buffer.length()&&rclcpp::ok())
+    {
+      buffer.clear();
+      resSize=-1;
+      // Input into buffer
+      std::cin >> buffer;
+      try
+      {
+        // Try to convert to int
+        id = std::stoi(buffer, &resSize);
+      }
+      catch (std::invalid_argument& e)
+      {
+      }
+      // Check if we need to output err message
+      if (resSize != buffer.length())
+      {
+        std::cout << "Please enter a valid integer for the motor id.\n";
+      }
+    }
+
+    resSize = -1;
+    buffer.clear();
+
+    std::cout << "Enter 1 to torque, -1 to untorque: ";
 
     int32_t torque;
-    std::cout << "Enter 1 to torque, -1 to untorque: ";
-    std::cin >> torque;
+    while (resSize != buffer.length()&&rclcpp::ok())
+    {
+      buffer.clear();
+      resSize=-1;
+      // Input into buffer
+      std::cin >> buffer;
+      try
+      {
+        torque = std::stoi(buffer, &resSize);
+      }
+      // Try to convert to int
+
+      catch (std::invalid_argument& e)
+      {
+      }
+      // Check if we need to output err message
+      if (resSize != buffer.length())
+      {
+        std::cout << "Please enter a valid integer for the torque value.\n";
+      }
+    }
 
     node->publish_motor_goal(id, torque);
 
     rclcpp::spin_some(node);
-    std::cin.ignore();  // Clear the newline from the buffer
+    std::cin.ignore(); // Clear the newline from the buffer
   }
 
   rclcpp::shutdown();
