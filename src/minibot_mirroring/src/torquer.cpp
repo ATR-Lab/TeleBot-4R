@@ -2,6 +2,7 @@
 #include <memory>
 #include "rclcpp/rclcpp.hpp"
 #include "telebot_interfaces/msg/motor_goal.hpp"
+#include "telebot_interfaces/msg/motor_goal_list.hpp"
 
 class MyPublisher : public rclcpp::Node
 {
@@ -9,21 +10,23 @@ public:
   MyPublisher()
   : Node("my_publisher")
   {
-    publisher_ = this->create_publisher<telebot_interfaces::msg::MotorGoal>("torque", 10);
+    publisher_ = this->create_publisher<telebot_interfaces::msg::MotorGoalList>("torque", 10);
   }
 
   void publish_motor_goal(const int id, const int32_t torque)
   {
-    auto msg = std::make_unique<telebot_interfaces::msg::MotorGoal>();
-    msg->motor_goal = torque;
-    msg->motor_id = id;
-    msg->movement_type = "Q";
+    telebot_interfaces::msg::MotorGoalList msg;
+    telebot_interfaces::msg::MotorGoal torqueMotor;
+    torqueMotor.motor_goal = torque;
+    torqueMotor.motor_id = id;
+    torqueMotor.movement_type = "Q";
+    msg.motor_goals.push_back(torqueMotor);
     publisher_->publish(std::move(msg));
     // RCLCPP_INFO(this->get_logger(), "Published MotorGoal: speed=%f, position=%f", speed, position);
   }
 
 private:
-  rclcpp::Publisher<telebot_interfaces::msg::MotorGoal>::SharedPtr publisher_;
+  rclcpp::Publisher<telebot_interfaces::msg::MotorGoalList>::SharedPtr publisher_;
 };
 
 int main(int argc, char *argv[])
