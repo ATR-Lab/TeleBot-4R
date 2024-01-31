@@ -29,16 +29,16 @@ public:
     Multiplexer() : Node("multiplexer")
     {
         declareParams();
-    
+
         initializeSources();
-        
+
         // Set up our control source topic settings
         rclcpp::QoS subQos(rclcpp::KeepLast(1)); // Setting queue size
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
         subQos.transient_local();                // This means that this topic will grab the last message upon subscribing. The publisher must also be transient local.
-    
+
         //
-        _sourceListener = this->create_subscription<std_msgs::msg::String>(TopicPrefixes::getPublicTopicName("control_source"), subQos, std::bind(&Multiplexer::changeControlSource, this, _1));//The discard is important here
+        _sourceListener = this->create_subscription<std_msgs::msg::String>(TopicPrefixes::getPublicTopicName("control_source"), subQos, std::bind(&Multiplexer::changeControlSource, this, _1)); // The discard is important here
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
         _publisher = this->create_publisher<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), pubQos);
@@ -53,26 +53,29 @@ public:
     }
 
 private:
-    void initializeSources(){
+    void initializeSources()
+    {
         _sourceHandler.loadFromFile("/home/chris/TeleBot-4R-ROS-2-1/src/motion/config/.ctrlsrcs");
-        
-        //Load from file
-        // std::vector<std::vector<std::string>> sources;
-        // get_parameter("control_sources",sources);
-        // for(auto& source:sources){
-        //     std::vector<std::string> topics(source.begin() + 1, source.end());//Copy just the topics
-        //     _sourceHandler.registerSource(source[0],topics);
-        // }
-        
-        auto defaultSrc=get_parameter("default_source").as_string();
-        if(defaultSrc!=""){
+
+        // Load from file
+        //  std::vector<std::vector<std::string>> sources;
+        //  get_parameter("control_sources",sources);
+        //  for(auto& source:sources){
+        //      std::vector<std::string> topics(source.begin() + 1, source.end());//Copy just the topics
+        //      _sourceHandler.registerSource(source[0],topics);
+        //  }
+
+        auto defaultSrc = get_parameter("default_source").as_string();
+        if (defaultSrc != "")
+        {
             std_msgs::msg::String str;
-            str.data=defaultSrc;
+            str.data = defaultSrc;
             changeControlSource(str);
         }
     }
-    void declareParams(){
-        this->declare_parameter("default_source","");
+    void declareParams()
+    {
+        this->declare_parameter("default_source", "");
     }
     void changeControlSource(const std_msgs::msg::String &sourceName)
     {
@@ -83,86 +86,95 @@ private:
             return;
         }
 
-        //Clear subscriptions
+        // Clear subscriptions
         for (auto &sub : _activeSubscriptions)
         {
             // Gets rid of the shared pointers references and deallocates ob
             sub->get_subscription_handle().reset();
         }
         _activeSubscriptions.clear();
-        
-        //Register new subscribers
+
+        // Register new subscribers
         const rclcpp::QoS subQos(rclcpp::KeepLast(1));
-        for(auto& topic:_sourceHandler.getActiveSourceTopics()){
-            _activeSubscriptions.push_front(this->create_subscription<MotorGoalList>
-            (topic, subQos, std::bind(&Multiplexer::listen, this, _1)));
+        for (auto &topic : _sourceHandler.getActiveSourceTopics())
+        {
+            _activeSubscriptions.push_front(this->create_subscription<MotorGoalList>(topic, subQos, std::bind(&Multiplexer::listen, this, _1)));
         }
-        
+
         RCLCPP_INFO(this->get_logger(), "Successfully set source to: %s", sourceName.data.c_str());
     }
     void relay()
     {
-        //Lock buffer
+        const int NO_LOG_YET = 0;
+        const int IGNORE_LOG = 1;
+        const int RELAY_LOG = 2;
+        static int lastLog = 0;
+        // Lock buffer
         _bufferLocked = true;
-        RCLCPP_INFO(this->get_logger(), "Relaying...");
-        if(_motorGoalBuffer.empty()){
+
+        if (_motorGoalBuffer.empty())
+        {
             _bufferLocked = false;
-            RCLCPP_INFO(this->get_logger(), "Relaying ignored!");
+            if (lastLog == NO_LOG_YET || lastLog == RELAY_LOG)
+            {
+                RCLCPP_INFO(this->get_logger(), "Relaying ignored!");
+                lastLog = IGNORE_LOG;
+            }
             return;
         }
         try
         {
-            //Compiling messages
+            if (lastLog == NO_LOG_YET || lastLog == IGNORE_LOG)
+            {
+                RCLCPP_INFO(this->get_logger(), "Relaying...");
+                lastLog=RELAY_LOG;
+            }
+            // Compiling messages
             MotorGoalList msg;
             for (const auto &it : _motorGoalBuffer)
             {
                 MotorGoal tmp;
-                tmp.motor_id=it.first;
-                tmp.motor_goal=it.second.first;
-                tmp.movement_type=it.second.second;
+                tmp.motor_id = it.first;
+                tmp.motor_goal = it.second.first;
+                tmp.movement_type = it.second.second;
                 msg.motor_goals.push_back(tmp);
             }
-            //Publishing new message
+            // Publishing new message
             _publisher->publish(msg);
 
-            //Clear buffer
+            // Clear buffer
             _motorGoalBuffer.clear();
         }
-        catch (std::exception& ex)
+        catch (std::exception &ex)
         {
-            RCLCPP_ERROR(this->get_logger(), "Relay failed: %s",ex.what());
+            RCLCPP_ERROR(this->get_logger(), "Relay failed: %s", ex.what());
         }
         _bufferLocked = false;
     }
     void listen(const MotorGoalList &msg)
     {
-        // size_t motorGoalsLength = msg.motor_goal.size();
-        // if (motorGoalsLength != msg.motor_id.size() || motorGoalsLength !=msg.movement_type.size())
-        // {
-        //     RCLCPP_ERROR(this->get_logger(), "Multiplexer refused relay! Unequal count of entries in motor goals message.");
-        //     return;
-        // }
-        for (auto& goal:msg.motor_goals)
+        for (auto &goal : msg.motor_goals)
         {
             while (_bufferLocked)
             {
                 sleep(0.05);
             }
-            auto pair=std::make_pair(goal.motor_id,std::make_pair(goal.motor_goal,goal.movement_type));
-            auto res=_motorGoalBuffer.insert(pair);
-            if(!res.second){
-                res.first->second=pair.second;
+            auto pair = std::make_pair(goal.motor_id, std::make_pair(goal.motor_goal, goal.movement_type));
+            auto res = _motorGoalBuffer.insert(pair);
+            if (!res.second)
+            {
+                res.first->second = pair.second;
             }
         }
     }
 
-    //Data
+    // Data
     ControlSourceHandler _sourceHandler;
     SubscriberList _activeSubscriptions;
     // This forces subscribers to wait for the buffer to finish its read of the motor goals
     bool _bufferLocked = false;
     // Maps a motor id to a pair of float and a boolean for if it should be written
-    std::unordered_map<int16_t, std::pair<float,std::string>> _motorGoalBuffer;
+    std::unordered_map<int16_t, std::pair<float, std::string>> _motorGoalBuffer;
     rclcpp::Publisher<MotorGoalList>::SharedPtr _publisher;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _sourceListener;
     rclcpp::TimerBase::SharedPtr _timer;
