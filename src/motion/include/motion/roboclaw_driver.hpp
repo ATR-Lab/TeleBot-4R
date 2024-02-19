@@ -49,8 +49,9 @@ protected:
         auto goals = getMotorGoals();
 
         for(auto &goal : goals->motor_goals) {
-            // NOTE: the speed parameter of this set_velocty might be wrong. It mentions that it should be big endian.
-            _drivers[goal.motor_id]->set_velocity(DEFAULT_ADDRESS, std::make_pair(goal.motor_goal, goal.motor_goal));
+            // The pair of ints hold two sets of 4 bytes (big endian), 
+            // so since we don't think we will ever exceed that, we pass 0 for the first number
+            _drivers[goal.motor_id]->set_velocity(DEFAULT_ADDRESS, std::make_pair(0, goal.motor_goal));
         }
     }
 
