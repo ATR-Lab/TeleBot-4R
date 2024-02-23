@@ -40,6 +40,7 @@ install(
 )
 install(DIRECTORY
   config
+  launch
   DESTINATION share/${PROJECT_NAME}
 )
 #This handles the linking of the library

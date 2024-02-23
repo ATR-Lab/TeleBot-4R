@@ -45,11 +45,11 @@ private:
             {7, 10},  // right_gripper
             {11, 11}, // left_shoulder_x
             {12, 12}, // left_shoulder_y
-            {13, 17}, // left_shoulder_z
-            {14, 21}, // left_arm_x
-            {15, 22}, // left_arm_z
-            {16, 23}, // left_wrist_y
-            {17, 24}  // left_gripper
+            {13, 13}, // left_shoulder_z
+            {14, 14}, // left_arm_x
+            {15, 15}, // left_arm_z
+            {16, 16}, // left_wrist_y
+            {17, 17}  // left_gripper
         };
     }
 
@@ -58,17 +58,18 @@ private:
         // Unpack data into unordered map
         for (auto &state : msg->motor_states)
         {
-            auto res = _motorStateBuffer.find(state.id);
-            // Check if it is in buffer
-            if (res == _motorStateBuffer.end())
-            {
-                _motorStateBuffer.insert(std::make_pair(state.id, state));
-            }
-            else
-            {
-                // Update if already in buffer
-                res->second = state;
-            }
+            _motorStateBuffer[state.id]=state;
+            // auto res = _motorStateBuffer.find(state.id);
+            // // Check if it is in buffer
+            // if (res == _motorStateBuffer.end())
+            // {
+            //     _motorStateBuffer.insert(std::make_pair(state.id, state));
+            // }
+            // else
+            // {
+            //     // Update if already in buffer
+            //     res->second = state;
+            // }
         }
     }
     bool isClawMotor(int id)
