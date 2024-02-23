@@ -1,3 +1,11 @@
+//All topics, remap these in a launch file
+/*
+Published topic to send to the telebot upper:
+    public/telebot_goals 
+Subscribed topic for the minibots current motor states:
+    public/minibot_state       
+*/
+
 #include "rclcpp/rclcpp.hpp"
 #include "telebot_interfaces/msg/motor_state_list.hpp" // Replace with the actual message type you want to mirror
 #include "telebot_interfaces/msg/motor_state.hpp"
@@ -15,9 +23,9 @@ public:
         rclcpp::QoS qos(3);
         qos.reliable();
         qos.transient_local();
-        _publisher = this->create_publisher<MotorGoalList>("mirror_minibot", qos);
+        _publisher = this->create_publisher<MotorGoalList>("public/telebot_goals", qos);
         _subscription = create_subscription<MotorStateList>(
-            "telebot/L_1/motion/public/upper_state", 10, std::bind(&MinibotMirror::subscriptionCallback, this, std::placeholders::_1));
+            "public/minibot_state", 10, std::bind(&MinibotMirror::subscriptionCallback, this, std::placeholders::_1));
 
         timer_ = create_wall_timer(std::chrono::milliseconds(500), std::bind(&MinibotMirror::publishCallback, this));
     }
