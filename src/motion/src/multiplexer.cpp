@@ -1,3 +1,11 @@
+//All topics, remap these in a launch file
+/*
+Published topic for the goals for entire robot:
+    private/motor_goals 
+Subscribed topic for what control source to set active:
+    public/control_source       
+*/
+
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "telebot_interfaces/msg/motor_goal.hpp"
@@ -38,10 +46,10 @@ public:
         subQos.transient_local();                // This means that this topic will grab the last message upon subscribing. The publisher must also be transient local.
 
         //
-        _sourceListener = this->create_subscription<std_msgs::msg::String>(TopicPrefixes::getPublicTopicName("control_source"), subQos, std::bind(&Multiplexer::changeControlSource, this, _1)); // The discard is important here
+        _sourceListener = this->create_subscription<std_msgs::msg::String>("public/control_source", subQos, std::bind(&Multiplexer::changeControlSource, this, _1)); // The discard is important here
         // Init publisher
         rclcpp::QoS pubQos(rclcpp::KeepLast(1));
-        _publisher = this->create_publisher<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), pubQos);
+        _publisher = this->create_publisher<MotorGoalList>("private/motor_goals", pubQos);
 
         // Create publish loop
         _timer = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&Multiplexer::relay, this));
@@ -55,6 +63,7 @@ public:
 private:
     void initializeSources()
     {
+        //THiS IS ONLY GOING TO WORK ON CHRIS' MACHINE!!!
         _sourceHandler.loadFromFile("/home/chris/TeleBot-4R-ROS-2-1/src/motion/config/.ctrlsrcs");
 
         // Load from file

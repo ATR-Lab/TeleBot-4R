@@ -1,3 +1,12 @@
+//All topics, remap these in a launch file
+/*
+Subscribed topic for the goals for upper:
+    private/motor_goals 
+Publish topic for upper motor state:
+    public/upper_state  
+*/
+
+
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "telebot_interfaces/msg/motor_goal_list.hpp"
@@ -28,8 +37,8 @@ public:
         
         rclcpp::QoS subQos(3);
         
-        _subscriber = this->create_subscription<MotorGoalList>(TopicPrefixes::getPrivateTopicName("motor_goals"), subQos, std::bind(&DriverNode::listenGoals, this, _1));
-        _publisher = this->create_publisher<MotorStateList>(TopicPrefixes::getPublicTopicName("upper_state"), subQos);
+        _subscriber = this->create_subscription<MotorGoalList>("private/motor_goals", subQos, std::bind(&DriverNode::listenGoals, this, _1));
+        _publisher = this->create_publisher<MotorStateList>("public/upper_state", subQos);
         _driverTimer = this->create_wall_timer(_driver->getWriteFrequency(), std::bind(&DriverNode::motorWriteRead, this));
         RCLCPP_INFO(this->get_logger(),"Upper driver successfully started...");
     }

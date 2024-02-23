@@ -1,3 +1,13 @@
+//All topics, remap these in a launch file
+/*
+Publish topic for the goals for upper:
+    private/upper_goals 
+Publish topic for the goals for lower:
+    private/lower_goals 
+Topic to subscribe to:
+    private/motor_goals       
+*/
+
 #include <vector>
 #include <algorithm>
 
@@ -22,9 +32,9 @@ public:
         this->declare_parameter("motor_ids.upper_ids", vector<int>());
         this->declare_parameter("motor_ids.lower_ids", vector<int>());
 
-        this->upperPublisher_ = this->create_publisher<MotorGoalList>(TopicPrefixes::getPrivateTopicName("upper_goals"), 10);
-        this->lowerPublisher_ = this->create_publisher<MotorGoalList>(TopicPrefixes::getPrivateTopicName("lower_goals"), 10);
-        this->sourceSubscription_ = this->create_subscription<MotorGoalList>(TopicPrefixes::getPrivateTopicName("goals"), 10, std::bind(&Splitter::goalCallback, this, _1));
+        this->upperPublisher_ = this->create_publisher<MotorGoalList>       ("private/upper_goals", 10);
+        this->lowerPublisher_ = this->create_publisher<MotorGoalList>       ("private/lower_goals", 10);
+        this->sourceSubscription_ = this->create_subscription<MotorGoalList>("private/motor_goals", 10, std::bind(&Splitter::goalCallback, this, _1));
     }
 private:
     void goalCallback(const MotorGoalList &goals) const {
