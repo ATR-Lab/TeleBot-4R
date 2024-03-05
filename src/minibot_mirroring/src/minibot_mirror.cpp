@@ -1,9 +1,9 @@
-//All topics, remap these in a launch file
+// All topics, remap these in a launch file
 /*
 Published topic to send to the telebot upper:
-    public/telebot_goals 
+    public/telebot_goals
 Subscribed topic for the minibots current motor states:
-    public/minibot_state       
+    public/minibot_state
 */
 
 #include "rclcpp/rclcpp.hpp"
@@ -58,7 +58,9 @@ private:
         // Unpack data into unordered map
         for (auto &state : msg->motor_states)
         {
-            _motorStateBuffer[state.id]=state;
+            _motorStateBuffer[state.id] = state;
+            RCLCPP_INFO(this->get_logger(), std::to_string(state.position).c_str());
+
             // auto res = _motorStateBuffer.find(state.id);
             // // Check if it is in buffer
             // if (res == _motorStateBuffer.end())
@@ -154,9 +156,9 @@ private:
                 continue;
             }
 
-            //Mirror the motor
+            // Mirror the motor
             MotorGoal transformedGoal;
-            transformedGoal.motor_goal = rawState.goal;
+            transformedGoal.motor_goal = rawState.position;
             transformedGoal.motor_id = _minibotToTelebot.at(rawState.id);
             transformedGoal.movement_type = "P";
 

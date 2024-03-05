@@ -12,8 +12,10 @@ Subscribed topic for what control source to set active:
 #include "telebot_interfaces/msg/motor_goal_list.hpp"
 #include "telebot_interfaces/msg/motor_state.hpp"
 #include <exception>
+#include <algorithm>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <mutex>
 #include "motion/control_source_handler.hpp"
@@ -37,9 +39,12 @@ public:
     Multiplexer() : Node("multiplexer")
     {
         declareParams();
+        auto idVec=get_parameter("invert_motor_goal_ids").as_integer_array();
 
+        std::for_each(idVec.begin(),idVec.end(),[this](int val){_motorIDsToInvert.insert(val);});
+        
         initializeSources();
-
+    
         // Set up our control source topic settings
         rclcpp::QoS subQos(rclcpp::KeepLast(1)); // Setting queue size
         subQos.reliable();                       // Setting communication to reliable. All messages will be received, publishers to this topic must also be reliable.
@@ -85,6 +90,7 @@ private:
     void declareParams()
     {
         this->declare_parameter("default_source", "");
+        this->declare_parameter("invert_motor_goal_ids", std::vector<int>{});
     }
     void changeControlSource(const std_msgs::msg::String &sourceName)
     {
@@ -144,7 +150,12 @@ private:
             {
                 MotorGoal tmp;
                 tmp.motor_id = it.first;
-                tmp.motor_goal = it.second.first;
+                if(_motorIDsToInvert.find(tmp.motor_id)!=_motorIDsToInvert.end()){
+                    RCLCPP_INFO(this->get_logger(), "Motor in ids");
+                }
+                //Invert motors that should be
+
+                tmp.motor_goal = (_motorIDsToInvert.find(tmp.motor_id)!=_motorIDsToInvert.end())?it.second.first*-1.0:it.second.first;
                 tmp.movement_type = it.second.second;
                 msg.motor_goals.push_back(tmp);
             }
@@ -182,6 +193,7 @@ private:
     SubscriberList _activeSubscriptions;
     // This forces subscribers to wait for the buffer to finish its read of the motor goals
     bool _bufferLocked = false;
+    std::unordered_set<int> _motorIDsToInvert;
     // Maps a motor id to a pair of float and a boolean for if it should be written
     std::unordered_map<int16_t, std::pair<float, std::string>> _motorGoalBuffer;
     rclcpp::Publisher<MotorGoalList>::SharedPtr _publisher;
