@@ -33,7 +33,7 @@ public:
     //Setters
     bool setActiveSource(const std::string&);//Done
     ControlSourceResult registerSource(const std::string&,const topicVector&);
-    bool loadFromFile(const std::string&);
+    int loadFromFile(const std::string&);
 private:
     std::unordered_map<std::string,topicVector> _controlSources;
     topicVector _activeTopics;

@@ -52,8 +52,8 @@ ControlSourceResult ControlSourceHandler::registerSource(const std::string &name
         return ControlSourceResult::FAILED;
     }
 }
-
-bool ControlSourceHandler::loadFromFile(const std::string &controlSourceFilePath)
+//0 on success anything else fail
+int ControlSourceHandler::loadFromFile(const std::string &controlSourceFilePath)
 {
     std::ifstream sourcesFile(controlSourceFilePath);
     // Check if the file is opened successfully
@@ -90,52 +90,7 @@ bool ControlSourceHandler::loadFromFile(const std::string &controlSourceFilePath
         }
     }
 
-    // while (!sourcesFile.eof()) {
-    //     //Get char
-    //     sourcesFile.get(ch);
-    //     // Colon represents end of topic name
-    //     sourceParsed=(ch==':');
-    //     switch (ch){
-    //         //When newline encountered, register source
-    //         case '\n':{
-    //             //If we have an empty topic, throw error
-    //             if(workingTopic.length()==0){
-    //                 std::logic_error e("Failed to parse control sources! Please ensure no whitespace is after your final topic in the control source file.");
-    //                 throw e;
-    //             }
-    //             //Register source and prepare for new source
-    //             topics.push_back(workingTopic);
-    //             registerSource(source,topics);
-
-    //             //Reset state
-    //             sourceParsed=false;
-    //             workingTopic.clear();
-    //             source.clear();
-    //             topics.clear();
-    //             break;
-    //         }
-    //         case '\t':{
-    //             //Ignore tabs too
-    //         }
-    //         case ' ':{
-    //             //If space add topic to list
-    //             if (sourceParsed){
-    //                 topics.push_back(workingTopic);
-    //                 workingTopic.clear();
-    //             }
-    //             break;
-    //         }
-    //         default:{
-    //             if (sourceParsed){
-    //                 workingTopic+=ch;
-    //             }
-    //             else{
-    //                 source+=ch;
-    //             }
-    //         }
-
-    //     }
-    // }
-
+    
     sourcesFile.close();
+    return 0;
 }
