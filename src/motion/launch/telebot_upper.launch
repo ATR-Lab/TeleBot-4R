@@ -1,0 +1,14 @@
+<launch>
+<arg name="TELEBOT_UPPER_STATE" default="telebot/L_1/motion/public/upper_state"/>
+<!-- This might fit better in the launch folder of minibot mirroring package -->
+<node pkg="motion" exec="driver_upper" name="driver_upper">
+    <param from="$(find-pkg-share motion)/config/driver_upper_config.yaml"/>
+    <remap from="public/upper_state" to="$(var TELEBOT_UPPER_STATE)"/>
+    <remap from="private/motor_goals" to="telebot/L_1/motion/private/motor_goals"/>
+</node>
+<node pkg="motion" exec="multiplexer" name="multiplexer">
+    <param from="$(find-pkg-share motion)/config/multiplexer_config.yaml"/>
+    <remap from="private/motor_goals" to="telebot/L_1/motion/private/motor_goals"/>
+    <remap from="public/control_source" to="telebot/L_1/motion/public/control_source"/>
+</node>
+</launch>

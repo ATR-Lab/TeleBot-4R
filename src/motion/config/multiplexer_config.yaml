@@ -1,0 +1,5 @@
+#Parameters for upper driver
+multiplexer:
+  ros__parameters:
+    default_source: "dbg" # "" is  no source active
+    invert_motor_goal_ids: [7,14,12,13,15,16,17,21,24]
