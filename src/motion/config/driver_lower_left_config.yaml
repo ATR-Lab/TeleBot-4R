@@ -1,0 +1,5 @@
+driver_lower:
+  ros__parameters:
+    roboclaw_motor: 60 #Note: These are arbitrary (not used by actual motors/boards), but need to remain consistent
+    usb_device: "SERIAL_NO" #USB Device containing dynamixel motors
+    usb_baudrate: 1000000 #Baudrate, probably wont be changed
