@@ -35,7 +35,8 @@ public:
 
 private:
     void initDriver(){
-        _driver= std::make_shared<RoboclawDriver>(get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
+        auto ids=std::make_pair(get_parameter("roboclaw_motor_id_1").as_int(),get_parameter("roboclaw_motor_id_2").as_int());
+        _driver= std::make_shared<RoboclawDriver>(ids,get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
         if (_driver->initialize() == -1)
         {
             RCLCPP_ERROR(this->get_logger(), "Driver initialization failed!!! Driver not running!!! Check cerr output for more info.");
@@ -43,7 +44,6 @@ private:
             return;
         }
         RCLCPP_INFO(this->get_logger(),"Driver initialization successful!");
-        RCLCPP_INFO(this->get_logger(),"Motors Torqued!");
     }
     void decParams(){
         //Note: these are purely conceptual ids, not enforced by the hardware. A write will be accepted only to motor_id_1, as this driver runs on a per side basis.
@@ -54,7 +54,16 @@ private:
     }
     void listenGoals(const MotorGoalList &msg)
     {
-        _driver->setWriteValues(msg);
+        //Filtering out to only this motors required goals
+        MotorGoalList filtered;
+        auto& ids=_driver->getIds();
+        auto predicate=[&ids](const MotorGoal& goal){return goal.motor_id==ids.first ||goal.motor_id==ids.second;};
+        for(auto&i:msg.motor_goals){
+            if(predicate(i)){
+                filtered.motor_goals.push_back(i);
+            }
+        }
+        _driver->setWriteValues(filtered);
     }
     void motorWriteRead()
     {

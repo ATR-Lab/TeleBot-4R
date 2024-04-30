@@ -51,7 +51,9 @@ public:
         }
         return 1;
     }
-
+    const std::pair<int,int>& getIds()const{
+        return _ids;
+    }
 protected:
     void writeMotors() override
     {
@@ -77,9 +79,6 @@ protected:
         MotorState state;
         _driver->get_velocity(DEFAULT_ADDRESS);
         return MotorStateList();
-    }
-    std::vector<int> getIds(){
-        return std::vector<int>{_ids.first,_ids.second};
     }
 private:
     std::shared_ptr<driver> _driver;
