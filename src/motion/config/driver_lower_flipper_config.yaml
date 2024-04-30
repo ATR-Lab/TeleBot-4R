@@ -1,0 +1,6 @@
+driver_upper:
+  ros__parameters:
+    pro_motors: [31, 40, 41, 42, 43] #Motor ids that are the dynamixel pro motors
+    xm_motors: [-1] #Motor ids that are dynamixel xm540
+    usb_device: "SERIAL_NO" #USB Device to be ran on
+    usb_baudrate: 1000000 #Baudrate, probably wont be changed
