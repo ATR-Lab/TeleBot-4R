@@ -37,8 +37,7 @@ public:
 
 private:
     void initDriver(){
-        _driver= std::make_shared<DynamixelDriver>(get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
-        _driver->setProMotors(get_parameter("pro_motors").as_integer_array());
+        _driver= std::make_shared<RoboclawDriver>(get_parameter("usb_device").as_string().c_str(),get_parameter("usb_baudrate").as_int());
         if (_driver->initialize() == -1)
         {
             RCLCPP_ERROR(this->get_logger(), "Driver initialization failed!!! Driver not running!!! Check cerr output for more info.");
@@ -46,8 +45,6 @@ private:
             return;
         }
         RCLCPP_INFO(this->get_logger(),"Driver initialization successful!");
-        _driver->setTorqueAllMotors(true);
-        RCLCPP_INFO(this->get_logger(),"Motors Torqued!");
     }
     void decParams(){
         this->declare_parameter("pro_motors", std::vector<int>{});
@@ -65,12 +62,9 @@ private:
         if(msg.motor_states.size()==0){
             RCLCPP_WARN(this->get_logger(),"No values read from motor. It is possible power was lost or a connection is loose.");
         }
-        if(msg.motor_states.size()<_driver->motorCount()){
-            RCLCPP_WARN(this->get_logger(),"Only read from %d/%d motors. A connection could be loose...",msg.motor_states.size(),_driver->motorCount());
-        }
         _publisher.get()->publish(msg);
     }
-    std::shared_ptr<DynamixelDriver> _driver;
+    std::shared_ptr<RoboclawDriver> _driver;
     rclcpp::TimerBase::SharedPtr _driverTimer;
     rclcpp::Publisher<MotorStateList>::SharedPtr _publisher;
     rclcpp::Subscription<MotorGoalList>::SharedPtr _subscriber;
