@@ -7,10 +7,8 @@
 #include <unordered_map>
 #include <list>
 #include <mutex>
-#include "dynamixel_sdk/dynamixel_sdk.h"
 #include "motion/dynamixel_addresses.hpp"
 #include "motion/topic_prefixes.hpp"
-#include "motion/dynamixel_driver.hpp"
 #include "motion/motion.hpp"
 #include "motion/roboclaw_driver.hpp"
 
@@ -45,10 +43,12 @@ private:
             return;
         }
         RCLCPP_INFO(this->get_logger(),"Driver initialization successful!");
+        RCLCPP_INFO(this->get_logger(),"Motors Torqued!");
     }
     void decParams(){
-        this->declare_parameter("pro_motors", std::vector<int>{});
-        this->declare_parameter("roboclaw_motors", std::vector<int>{});
+        //Note: these are purely conceptual ids, not enforced by the hardware. A write will be accepted only to motor_id_1, as this driver runs on a per side basis.
+        this->declare_parameter("roboclaw_motor_id_1", -1);
+        this->declare_parameter("roboclaw_motor_id_2", -1);
         this->declare_parameter("usb_device", "DEFAULT");
         this->declare_parameter("usb_baudrate", 1000000);
     }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         // Execute until shutdown
         rclcpp::spin(driver);
     }
-    catch (std::system_error e)
+    catch (std::system_error& e)
     {
         std::cout << "Exiting...";
     }
